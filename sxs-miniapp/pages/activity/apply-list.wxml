@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">活动申报列表</view>
+  <view class="desc">团队负责人查看与管理本团队的申报项目。</view>
+</view>

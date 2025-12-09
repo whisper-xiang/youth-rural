@@ -1,0 +1,3 @@
+.container { padding: 32rpx; }
+.title { font-size: 32rpx; font-weight: 600; margin-bottom: 16rpx; }
+.desc { font-size: 28rpx; color: #666; }

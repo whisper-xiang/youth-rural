@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">项目审批列表</view>
+  <view class="desc">学院管理员、高校管理员查看待审与已审“三下乡”项目。</view>
+</view>

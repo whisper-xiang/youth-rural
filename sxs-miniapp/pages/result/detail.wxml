@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">成果详情</view>
+  <view class="desc">查看某一团队最终成果的详细信息，如论文、报告、视频链接等。</view>
+</view>

@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">评优详情</view>
+  <view class="desc">评审专家查看项目材料并进行在线评分和填写评语。</view>
+</view>

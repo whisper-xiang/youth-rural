@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">成果列表</view>
+  <view class="desc">展示各团队提交的最终成果，支持按学院、主题浏览。</view>
+</view>

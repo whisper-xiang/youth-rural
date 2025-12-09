@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">个人中心</view>
+  <view class="desc">展示当前登录用户的基本信息和角色，并提供退出登录等操作入口。</view>
+</view>

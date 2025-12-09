@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">项目审批详情</view>
+  <view class="desc">显示项目申报信息及学院管理员/高校管理员的审批意见。</view>
+</view>

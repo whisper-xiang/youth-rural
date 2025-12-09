@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">评优项目列表</view>
+  <view class="desc">展示参与评优的项目，评审专家可进入详情进行打分和评价。</view>
+</view>

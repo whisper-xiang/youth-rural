@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">进度跟踪列表</view>
+  <view class="desc">团队按阶段上传活动进展，管理员可查看各团队进度。</view>
+</view>

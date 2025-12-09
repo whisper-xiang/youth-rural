@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">通知公告</view>
+  <view class="desc">用于发布“三下乡”活动相关通知、政策文件和公告信息。</view>
+</view>

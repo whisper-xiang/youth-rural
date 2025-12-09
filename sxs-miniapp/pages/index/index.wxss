@@ -1,0 +1,92 @@
+.container {
+  padding: 32rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 用户信息区 */
+.user-info {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #007AFF, #0051D5);
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  color: #fff;
+}
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  margin-right: 24rpx;
+}
+.info .role {
+  font-size: 28rpx;
+  opacity: 0.8;
+}
+.info .name {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-top: 8rpx;
+}
+
+/* 功能网格 */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -16rpx;
+  margin-bottom: 32rpx;
+}
+.grid-item {
+  width: 33.333%;
+  padding: 16rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 12rpx;
+}
+.icon {
+  width: 64rpx;
+  height: 64rpx;
+  margin-bottom: 16rpx;
+  background-color: #f0f0f0;
+  border-radius: 12rpx;
+}
+.icon-apply { background-color: #4CAF50; }
+.icon-approve { background-color: #FF9800; }
+.icon-progress { background-color: #2196F3; }
+.icon-result { background-color: #9C27B0; }
+.icon-evaluate { background-color: #E91E63; }
+.icon-notice { background-color: #00BCD4; }
+.label {
+  font-size: 26rpx;
+  color: #333;
+}
+
+/* 快捷入口 */
+.quick-links {
+  background-color: #fff;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+.link-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #eee;
+}
+.link-item:last-child {
+  border-bottom: none;
+}
+.link-label {
+  font-size: 30rpx;
+  color: #333;
+}
+.arrow {
+  font-size: 28rpx;
+  color: #999;
+}

@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">登录 / 角色选择</view>
+  <view class="desc">用于不同角色用户登录系统并进入对应功能模块。</view>
+</view>

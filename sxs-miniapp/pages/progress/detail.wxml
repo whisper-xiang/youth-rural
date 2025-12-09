@@ -1,0 +1,4 @@
+<view class="container">
+  <view class="title">进度详情</view>
+  <view class="desc">查看某一阶段进展的详细信息，如日志、照片、调研报告等。</view>
+</view>
