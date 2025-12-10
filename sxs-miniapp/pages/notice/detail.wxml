@@ -1,4 +1,53 @@
-<view class="container">
-  <view class="title">公告详情</view>
-  <view class="desc">展示单条通知公告的详细内容。</view>
+<view class="page">
+  <!-- 通知头部 -->
+  <view class="header">
+    <view class="notice-tag tag-{{detail.type}}">{{detail.typeName}}</view>
+    <view class="notice-title">{{detail.title}}</view>
+    <view class="notice-meta">
+      <view class="meta-item">
+        <text class="meta-label">发布单位：</text>
+        <text class="meta-value">{{detail.source}}</text>
+      </view>
+      <view class="meta-item">
+        <text class="meta-label">发布时间：</text>
+        <text class="meta-value">{{detail.publishTime}}</text>
+      </view>
+      <view class="meta-item" wx:if="{{detail.viewCount}}">
+        <text class="meta-label">阅读次数：</text>
+        <text class="meta-value">{{detail.viewCount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 通知内容 -->
+  <view class="content">
+    <rich-text nodes="{{detail.content}}"></rich-text>
+  </view>
+
+  <!-- 附件列表 -->
+  <view class="attachments" wx:if="{{detail.attachments && detail.attachments.length > 0}}">
+    <view class="section-title">附件下载</view>
+    <view class="attachment-list">
+      <view class="attachment-item" wx:for="{{detail.attachments}}" wx:key="index" bindtap="downloadFile" data-file="{{item}}">
+        <view class="attachment-icon file-{{item.type}}"></view>
+        <view class="attachment-info">
+          <view class="attachment-name">{{item.name}}</view>
+          <view class="attachment-size">{{item.size}}</view>
+        </view>
+        <view class="attachment-action">下载</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer">
+    <view class="btn-share" bindtap="shareNotice">
+      <text class="btn-icon">📤</text>
+      <text class="btn-text">分享</text>
+    </view>
+    <view class="btn-collect {{detail.isCollected ? 'collected' : ''}}" bindtap="toggleCollect">
+      <text class="btn-icon">{{detail.isCollected ? '⭐' : '☆'}}</text>
+      <text class="btn-text">{{detail.isCollected ? '已收藏' : '收藏'}}</text>
+    </view>
+  </view>
 </view>

@@ -1,3 +1,5 @@
+const app = getApp();
+
 Page({
   data: {
     isLogin: false,
@@ -11,7 +13,8 @@ Page({
       progressCount: 0,
       resultCount: 0
     },
-    unreadCount: 0
+    unreadCount: 0,
+    menuItems: []
   },
 
   onLoad() {
@@ -24,40 +27,51 @@ Page({
 
   // 检查登录状态
   checkLogin() {
-    const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo && userInfo.name) {
-      // 模拟数据
+    const isLogin = app.globalData.isLogin;
+    if (isLogin) {
+      const userInfo = app.globalData.userInfo;
+      const menuItems = this.getMenuByRole(userInfo.role);
       this.setData({
         isLogin: true,
         userInfo: {
-          name: userInfo.name || '张三',
-          roleName: userInfo.roleName || '团队负责人',
-          avatarText: (userInfo.name || '张').slice(0, 1)
+          name: userInfo.name,
+          roleName: userInfo.roleName,
+          avatarText: userInfo.name.slice(0, 1)
         },
         stats: {
           applyCount: 3,
           progressCount: 5,
           resultCount: 2
         },
-        unreadCount: 2
+        unreadCount: 2,
+        menuItems
       });
     } else {
-      // 模拟已登录状态（演示用）
       this.setData({
-        isLogin: true,
+        isLogin: false,
         userInfo: {
-          name: '张三',
-          roleName: '团队负责人',
-          avatarText: '张'
+          name: '未登录',
+          roleName: '请先登录',
+          avatarText: '?'
         },
-        stats: {
-          applyCount: 3,
-          progressCount: 5,
-          resultCount: 2
-        },
-        unreadCount: 2
+        stats: { applyCount: 0, progressCount: 0, resultCount: 0 },
+        unreadCount: 0,
+        menuItems: []
       });
     }
+  },
+
+  // 根据角色获取菜单
+  getMenuByRole(role) {
+    const allMenus = [
+      { key: 'apply', name: '我的申报', url: '/pages/activity/apply-list', icon: 'icon-apply', roles: ['student'] },
+      { key: 'progress', name: '进度记录', url: '/pages/progress/list', icon: 'icon-progress', roles: ['student', 'teacher'] },
+      { key: 'result', name: '我的成果', url: '/pages/result/list', icon: 'icon-result', roles: ['student'] },
+      { key: 'approve', name: '待审项目', url: '/pages/approve/list', icon: 'icon-approve', roles: ['college_admin', 'school_admin'] },
+      { key: 'evaluate', name: '待评项目', url: '/pages/evaluate/list', icon: 'icon-evaluate', roles: ['expert', 'school_admin'] },
+      { key: 'notice', name: '消息通知', url: '/pages/notice/list', icon: 'icon-notice', roles: ['student', 'teacher', 'college_admin', 'school_admin', 'expert'] }
+    ];
+    return allMenus.filter(m => m.roles.includes(role));
   },
 
   // 跳转登录
@@ -108,7 +122,7 @@ Page({
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          wx.removeStorageSync('userInfo');
+          app.logout();
           this.setData({
             isLogin: false,
             userInfo: {
@@ -116,14 +130,25 @@ Page({
               roleName: '请先登录',
               avatarText: '?'
             },
-            stats: {
-              applyCount: 0,
-              progressCount: 0,
-              resultCount: 0
-            },
-            unreadCount: 0
+            stats: { applyCount: 0, progressCount: 0, resultCount: 0 },
+            unreadCount: 0,
+            menuItems: []
           });
           wx.showToast({ title: '已退出登录', icon: 'success' });
+        }
+      }
+    });
+  },
+
+  // 切换身份
+  switchRole() {
+    wx.showModal({
+      title: '切换身份',
+      content: '确定要切换到其他身份吗？',
+      success: (res) => {
+        if (res.confirm) {
+          app.logout();
+          wx.navigateTo({ url: '/pages/auth/login' });
         }
       }
     });

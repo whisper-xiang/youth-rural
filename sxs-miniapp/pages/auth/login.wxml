@@ -1,4 +1,63 @@
-<view class="container">
-  <view class="title">登录 / 角色选择</view>
-  <view class="desc">用于不同角色用户登录系统并进入对应功能模块。</view>
+<view class="page">
+  <!-- Logo 区域 -->
+  <view class="logo-area">
+    <view class="logo">🌾</view>
+    <view class="app-name">三下乡活动管理系统</view>
+    <view class="app-desc">大学生暑期社会实践</view>
+  </view>
+
+  <!-- 角色选择 -->
+  <view class="role-section">
+    <view class="section-title">请选择您的身份</view>
+    <view class="role-list">
+      <view class="role-item {{selectedRole === 'student' ? 'selected' : ''}}" bindtap="selectRole" data-role="student">
+        <view class="role-icon">👨‍🎓</view>
+        <view class="role-info">
+          <view class="role-name">学生/团队负责人</view>
+          <view class="role-desc">申报项目、上传进度、提交成果</view>
+        </view>
+        <view class="role-check" wx:if="{{selectedRole === 'student'}}">✓</view>
+      </view>
+      <view class="role-item {{selectedRole === 'teacher' ? 'selected' : ''}}" bindtap="selectRole" data-role="teacher">
+        <view class="role-icon">👨‍🏫</view>
+        <view class="role-info">
+          <view class="role-name">指导教师</view>
+          <view class="role-desc">查看项目进度、指导学生实践</view>
+        </view>
+        <view class="role-check" wx:if="{{selectedRole === 'teacher'}}">✓</view>
+      </view>
+      <view class="role-item {{selectedRole === 'college_admin' ? 'selected' : ''}}" bindtap="selectRole" data-role="college_admin">
+        <view class="role-icon">🏛️</view>
+        <view class="role-info">
+          <view class="role-name">学院管理员</view>
+          <view class="role-desc">审批项目、发布通知、管理数据</view>
+        </view>
+        <view class="role-check" wx:if="{{selectedRole === 'college_admin'}}">✓</view>
+      </view>
+      <view class="role-item {{selectedRole === 'school_admin' ? 'selected' : ''}}" bindtap="selectRole" data-role="school_admin">
+        <view class="role-icon">🎓</view>
+        <view class="role-info">
+          <view class="role-name">校级管理员</view>
+          <view class="role-desc">终审项目、评优管理、全局管理</view>
+        </view>
+        <view class="role-check" wx:if="{{selectedRole === 'school_admin'}}">✓</view>
+      </view>
+      <view class="role-item {{selectedRole === 'expert' ? 'selected' : ''}}" bindtap="selectRole" data-role="expert">
+        <view class="role-icon">⭐</view>
+        <view class="role-info">
+          <view class="role-name">评审专家</view>
+          <view class="role-desc">查看成果、评审打分</view>
+        </view>
+        <view class="role-check" wx:if="{{selectedRole === 'expert'}}">✓</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 登录按钮 -->
+  <view class="login-section">
+    <button class="btn-login {{selectedRole ? '' : 'disabled'}}" bindtap="doLogin">
+      登录进入系统
+    </button>
+    <view class="login-tip">演示模式：选择角色后直接登录</view>
+  </view>
 </view>

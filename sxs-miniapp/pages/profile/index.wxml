@@ -9,6 +9,7 @@
       <view class="user-role">{{userInfo.roleName}}</view>
     </view>
     <view class="login-btn" wx:if="{{!isLogin}}" bindtap="goLogin">登录</view>
+    <view class="switch-btn" wx:if="{{isLogin}}" bindtap="switchRole">切换身份</view>
   </view>
 
   <!-- 我的数据 -->
@@ -27,28 +28,13 @@
     </view>
   </view>
 
-  <!-- 功能菜单 -->
-  <view class="menu-section">
-    <view class="menu-item" bindtap="goToPage" data-url="/pages/activity/apply-list">
-      <view class="menu-icon icon-apply"></view>
-      <view class="menu-text">我的申报</view>
+  <!-- 功能菜单（根据角色动态显示） -->
+  <view class="menu-section" wx:if="{{menuItems.length > 0}}">
+    <view class="menu-item" wx:for="{{menuItems}}" wx:key="key" bindtap="goToPage" data-url="{{item.url}}">
+      <view class="menu-icon {{item.icon}}"></view>
+      <view class="menu-text">{{item.name}}</view>
       <view class="menu-arrow">›</view>
-    </view>
-    <view class="menu-item" bindtap="goToPage" data-url="/pages/progress/list">
-      <view class="menu-icon icon-progress"></view>
-      <view class="menu-text">进度记录</view>
-      <view class="menu-arrow">›</view>
-    </view>
-    <view class="menu-item" bindtap="goToPage" data-url="/pages/result/list">
-      <view class="menu-icon icon-result"></view>
-      <view class="menu-text">我的成果</view>
-      <view class="menu-arrow">›</view>
-    </view>
-    <view class="menu-item" bindtap="goToPage" data-url="/pages/notice/list">
-      <view class="menu-icon icon-notice"></view>
-      <view class="menu-text">消息通知</view>
-      <view class="menu-arrow">›</view>
-      <view class="menu-badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+      <view class="menu-badge" wx:if="{{item.key === 'notice' && unreadCount > 0}}">{{unreadCount}}</view>
     </view>
   </view>
 

@@ -31,20 +31,18 @@
   padding: 28rpx 24rpx;
   border-radius: 12rpx;
 }
-.avatar {
+.user-avatar {
   width: 80rpx;
   height: 80rpx;
   border-radius: 50%;
   background: #2b5aed;
+  color: #fff;
+  font-size: 32rpx;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 20rpx;
-}
-.avatar-text {
-  color: #fff;
-  font-size: 32rpx;
-  font-weight: 500;
 }
 .user-info {
   flex: 1;
@@ -58,6 +56,56 @@
   font-size: 24rpx;
   color: #8c8c8c;
   margin-top: 6rpx;
+}
+.switch-role {
+  font-size: 24rpx;
+  color: #2b5aed;
+  padding: 8rpx 20rpx;
+  border: 1rpx solid #2b5aed;
+  border-radius: 24rpx;
+}
+
+/* 未登录卡片 */
+.login-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  margin: 24rpx;
+  padding: 32rpx 24rpx;
+  border-radius: 12rpx;
+}
+.login-icon {
+  width: 80rpx;
+  height: 80rpx;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+.login-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #666;
+}
+.login-arrow {
+  font-size: 32rpx;
+  color: #d9d9d9;
+}
+
+/* 模块区域 */
+.module-section {
+  margin-top: 8rpx;
+}
+
+/* 空提示 */
+.empty-tip {
+  text-align: center;
+  padding: 60rpx;
+  color: #bfbfbf;
+  font-size: 26rpx;
 }
 
 /* 功能模块 */

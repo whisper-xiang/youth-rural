@@ -1,3 +1,153 @@
-.container { padding: 32rpx; }
-.title { font-size: 32rpx; font-weight: 600; margin-bottom: 16rpx; }
-.desc { font-size: 28rpx; color: #666; }
+.page {
+  min-height: 100vh;
+  background: #fff;
+  padding-bottom: 140rpx;
+}
+
+/* 头部 */
+.header {
+  padding: 32rpx;
+  border-bottom: 16rpx solid #f7f8fa;
+}
+.notice-tag {
+  display: inline-block;
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 6rpx;
+  margin-bottom: 16rpx;
+}
+.tag-notice {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+.tag-policy {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+.tag-activity {
+  background: #f6ffed;
+  color: #52c41a;
+}
+.notice-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.5;
+  margin-bottom: 24rpx;
+}
+.notice-meta {
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.meta-item {
+  display: flex;
+  margin-bottom: 12rpx;
+}
+.meta-item:last-child {
+  margin-bottom: 0;
+}
+.meta-label {
+  font-size: 26rpx;
+  color: #8c8c8c;
+}
+.meta-value {
+  font-size: 26rpx;
+  color: #1a1a1a;
+}
+
+/* 内容 */
+.content {
+  padding: 32rpx;
+  font-size: 30rpx;
+  color: #333;
+  line-height: 1.8;
+}
+
+/* 附件 */
+.attachments {
+  padding: 0 32rpx 32rpx;
+}
+.section-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #1a1a1a;
+  margin-bottom: 20rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.attachment-list {
+  background: #f7f8fa;
+  border-radius: 12rpx;
+  padding: 8rpx 20rpx;
+}
+.attachment-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #e8e8e8;
+}
+.attachment-item:last-child {
+  border-bottom: none;
+}
+.attachment-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+}
+.file-word {
+  background: #2b5aed;
+}
+.file-excel {
+  background: #52c41a;
+}
+.file-pdf {
+  background: #ff4d4f;
+}
+.attachment-info {
+  flex: 1;
+}
+.attachment-name {
+  font-size: 28rpx;
+  color: #1a1a1a;
+  margin-bottom: 4rpx;
+}
+.attachment-size {
+  font-size: 22rpx;
+  color: #bfbfbf;
+}
+.attachment-action {
+  font-size: 26rpx;
+  color: #2b5aed;
+}
+
+/* 底部操作 */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: #fff;
+  border-top: 1rpx solid #f0f0f0;
+  padding: 20rpx 32rpx;
+}
+.btn-share,
+.btn-collect {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+}
+.btn-icon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+.btn-text {
+  font-size: 28rpx;
+  color: #666;
+}
+.btn-collect.collected .btn-text {
+  color: #fa8c16;
+}

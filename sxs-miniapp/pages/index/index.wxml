@@ -5,39 +5,37 @@
     <view class="banner-subtitle">活动管理系统</view>
   </view>
 
+  <!-- 用户信息卡片 -->
+  <view class="user-card" wx:if="{{isLogin}}">
+    <view class="user-avatar">{{userInfo.avatarText}}</view>
+    <view class="user-info">
+      <view class="user-name">{{userInfo.name}}</view>
+      <view class="user-role">{{userInfo.roleName}}</view>
+    </view>
+    <view class="switch-role" bindtap="switchRole">切换身份</view>
+  </view>
 
+  <!-- 未登录提示 -->
+  <view class="login-card" wx:else bindtap="goLogin">
+    <view class="login-icon">👤</view>
+    <view class="login-text">点击登录，选择您的身份</view>
+    <view class="login-arrow">›</view>
+  </view>
 
   <!-- 功能模块入口 -->
-  <view class="module-grid">
-    <view class="module-card" bindtap="goToPage" data-url="/pages/activity/apply-list">
-      <view class="module-icon icon-apply"></view>
-      <view class="module-name">活动申报</view>
-      <view class="module-desc">创建和管理申报项目</view>
+  <view class="module-section">
+    <view class="section-title">功能模块</view>
+    <view class="module-grid">
+      <view class="module-card" wx:for="{{modules}}" wx:key="key" bindtap="goToPage" data-url="{{item.url}}">
+        <view class="module-icon {{item.icon}}"></view>
+        <view class="module-name">{{item.name}}</view>
+        <view class="module-desc">{{item.desc}}</view>
+      </view>
     </view>
-    <view class="module-card" bindtap="goToPage" data-url="/pages/approve/list">
-      <view class="module-icon icon-approve"></view>
-      <view class="module-name">审批管理</view>
-      <view class="module-desc">审核项目申报材料</view>
-    </view>
-    <view class="module-card" bindtap="goToPage" data-url="/pages/progress/list">
-      <view class="module-icon icon-progress"></view>
-      <view class="module-name">进度跟踪</view>
-      <view class="module-desc">上传和查看活动进展</view>
-    </view>
-    <view class="module-card" bindtap="goToPage" data-url="/pages/result/list">
-      <view class="module-icon icon-result"></view>
-      <view class="module-name">成果管理</view>
-      <view class="module-desc">提交和浏览活动成果</view>
-    </view>
-    <view class="module-card" bindtap="goToPage" data-url="/pages/evaluate/list">
-      <view class="module-icon icon-evaluate"></view>
-      <view class="module-name">评优管理</view>
-      <view class="module-desc">项目评审与打分</view>
-    </view>
-    <view class="module-card" bindtap="goToPage" data-url="/pages/notice/list">
-      <view class="module-icon icon-notice"></view>
-      <view class="module-name">通知公告</view>
-      <view class="module-desc">查看最新通知</view>
-    </view>
+  </view>
+
+  <!-- 无模块提示 -->
+  <view class="empty-tip" wx:if="{{modules.length === 0 && isLogin}}">
+    <text>当前角色暂无可用功能模块</text>
   </view>
 </view>

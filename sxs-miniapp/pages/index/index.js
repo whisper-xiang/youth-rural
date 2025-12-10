@@ -1,29 +1,75 @@
 // 首页：功能模块导航入口
+const app = getApp();
+
 Page({
   data: {
+    isLogin: false,
     userInfo: {
-      name: '未登录',
-      role: '请先登录',
-      avatarText: '?'
-    }
+      name: '',
+      roleName: '',
+      avatarText: ''
+    },
+    modules: []
   },
 
   onLoad() {
-    // TODO: 从本地存储或接口获取用户信息
-    const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo && userInfo.name) {
+    this.checkLogin();
+  },
+
+  onShow() {
+    this.checkLogin();
+  },
+
+  // 检查登录状态并加载模块
+  checkLogin() {
+    const isLogin = app.globalData.isLogin;
+    if (isLogin) {
+      const userInfo = app.globalData.userInfo;
+      const modules = app.getRoleModules();
       this.setData({
+        isLogin: true,
         userInfo: {
           name: userInfo.name,
-          role: userInfo.role || '普通用户',
+          roleName: userInfo.roleName,
           avatarText: userInfo.name.slice(0, 1)
-        }
+        },
+        modules
+      });
+    } else {
+      this.setData({
+        isLogin: false,
+        userInfo: { name: '', roleName: '', avatarText: '' },
+        modules: []
       });
     }
   },
 
+  // 跳转登录
+  goLogin() {
+    wx.navigateTo({ url: '/pages/auth/login' });
+  },
+
+  // 切换身份
+  switchRole() {
+    wx.showModal({
+      title: '切换身份',
+      content: '确定要切换到其他身份吗？',
+      success: (res) => {
+        if (res.confirm) {
+          app.logout();
+          wx.navigateTo({ url: '/pages/auth/login' });
+        }
+      }
+    });
+  },
+
   // 跳转到对应页面
   goToPage(e) {
+    if (!this.data.isLogin) {
+      wx.navigateTo({ url: '/pages/auth/login' });
+      return;
+    }
+
     const url = e.currentTarget.dataset.url;
     // tabBar 页面用 switchTab，其他用 navigateTo
     const tabBarPages = [
