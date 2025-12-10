@@ -8,8 +8,8 @@
   </view>
 
   <!-- 通知列表 -->
-  <view class="list" wx:if="{{filteredList.length > 0}}">
-    <view class="notice-item {{item.isRead ? '' : 'unread'}}" wx:for="{{filteredList}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+  <view class="list" wx:if="{{list.length > 0}}">
+    <view class="notice-item {{item.isRead ? '' : 'unread'}}" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
       <view class="notice-dot" wx:if="{{!item.isRead}}"></view>
       <view class="notice-content">
         <view class="notice-header">
@@ -25,11 +25,19 @@
       </view>
       <view class="notice-arrow">›</view>
     </view>
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{loading}}">加载中...</view>
+    <view class="load-more" wx:elif="{{!hasMore}}">没有更多了</view>
   </view>
 
   <!-- 空状态 -->
-  <view class="empty" wx:else>
+  <view class="empty" wx:elif="{{!loading}}">
     <view class="empty-icon">📢</view>
-    <view class="empty-text">暂无{{tabName}}消息</view>
+    <view class="empty-text">暂无通知消息</view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading && list.length === 0}}">
+    <text>加载中...</text>
   </view>
 </view>

@@ -1,5 +1,6 @@
 // 首页：功能模块导航入口
 const app = getApp();
+const { userApi } = require('../../utils/api');
 
 Page({
   data: {
@@ -9,7 +10,12 @@ Page({
       roleName: '',
       avatarText: ''
     },
-    modules: []
+    modules: [],
+    stats: {
+      projectCount: 0,
+      pendingCount: 0,
+      noticeCount: 0
+    }
   },
 
   onLoad() {
@@ -35,12 +41,25 @@ Page({
         },
         modules
       });
+      // 加载统计数据
+      this.loadStats();
     } else {
       this.setData({
         isLogin: false,
         userInfo: { name: '', roleName: '', avatarText: '' },
-        modules: []
+        modules: [],
+        stats: { projectCount: 0, pendingCount: 0, noticeCount: 0 }
       });
+    }
+  },
+
+  // 加载统计数据
+  async loadStats() {
+    try {
+      const stats = await userApi.getStats();
+      this.setData({ stats });
+    } catch (err) {
+      console.error('获取统计数据失败:', err);
     }
   },
 

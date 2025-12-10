@@ -1,9 +1,13 @@
+const { projectApi, userApi } = require('../../utils/api');
+const { uploadImage } = require('../../utils/request');
+
 Page({
   data: {
     mode: 'create', // create | view | edit
     isView: false,
     id: null,
     themeOptions: ['乡村振兴', '支教助学', '红色文化', '科技支农', '医疗卫生', '法律援助', '其他'],
+    teacherOptions: [],
     form: {
       title: '',
       theme: '',
@@ -12,13 +16,15 @@ Page({
       endDate: '',
       leader: '',
       phone: '',
+      teacherId: '',
       teacher: '',
       members: '',
       description: '',
       plan: '',
       expectedResult: ''
     },
-    detail: null
+    detail: null,
+    submitting: false
   },
 
   onLoad(options) {
@@ -31,38 +37,43 @@ Page({
 
     if (mode === 'view' && id) {
       this.loadDetail(id);
+    } else {
+      this.loadTeachers();
     }
 
-    // 设置页面标题
     wx.setNavigationBarTitle({
       title: mode === 'create' ? '新建申报' : '申报详情'
     });
   },
 
+  // 加载教师列表
+  async loadTeachers() {
+    try {
+      const teachers = await userApi.getTeachers();
+      this.setData({ teacherOptions: teachers });
+    } catch (err) {
+      console.error('加载教师列表失败:', err);
+    }
+  },
+
   // 加载详情
-  loadDetail(id) {
-    // TODO: 替换为实际接口调用
-    const mockDetail = {
-      id: '1',
-      title: '乡村振兴调研实践',
-      theme: '乡村振兴',
-      location: '湖南省长沙市',
-      startDate: '2025-07-01',
-      endDate: '2025-07-15',
-      leader: '张三',
-      phone: '13800138000',
-      teacher: '李教授',
-      members: '李四, 王五, 赵六, 钱七',
-      description: '深入农村基层，调研乡村振兴战略实施情况，了解农村发展现状与需求。',
-      plan: '第一周：走访调研\n第二周：数据整理与分析',
-      expectedResult: '完成调研报告一份，提出建议方案',
-      status: 'pending',
-      statusText: '待审核'
-    };
-    this.setData({
-      form: mockDetail,
-      detail: mockDetail
-    });
+  async loadDetail(id) {
+    try {
+      const res = await projectApi.getDetail(id);
+      const statusMap = {
+        draft: '草稿', pending: '待审核', college_approved: '学院已审',
+        approved: '已通过', rejected: '已驳回'
+      };
+      const detail = {
+        ...res,
+        startDate: res.start_date ? res.start_date.slice(0, 10) : '',
+        endDate: res.end_date ? res.end_date.slice(0, 10) : '',
+        statusText: statusMap[res.status] || res.status
+      };
+      this.setData({ form: detail, detail });
+    } catch (err) {
+      console.error('加载项目详情失败:', err);
+    }
   },
 
   // 输入框变化
@@ -130,9 +141,39 @@ Page({
   },
 
   // 保存草稿
-  saveDraft() {
-    // TODO: 调用接口保存草稿
-    wx.showToast({ title: '草稿已保存', icon: 'success' });
+  async saveDraft() {
+    if (this.data.submitting) return;
+    this.setData({ submitting: true });
+
+    try {
+      const { form, id, mode } = this.data;
+      const data = {
+        title: form.title,
+        theme: form.theme,
+        location: form.location,
+        start_date: form.startDate,
+        end_date: form.endDate,
+        leader: form.leader,
+        phone: form.phone,
+        teacher_id: form.teacherId,
+        members: form.members,
+        description: form.description,
+        plan: form.plan,
+        expected_result: form.expectedResult
+      };
+
+      if (mode === 'create') {
+        await projectApi.create(data);
+      } else {
+        await projectApi.update(id, data);
+      }
+
+      wx.showToast({ title: '草稿已保存', icon: 'success' });
+    } catch (err) {
+      console.error('保存草稿失败:', err);
+    } finally {
+      this.setData({ submitting: false });
+    }
   },
 
   // 提交申报
@@ -142,13 +183,46 @@ Page({
     wx.showModal({
       title: '确认提交',
       content: '提交后将进入审核流程，是否确认提交？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          // TODO: 调用接口提交
-          wx.showToast({ title: '提交成功', icon: 'success' });
-          setTimeout(() => {
-            wx.navigateBack();
-          }, 1500);
+          this.setData({ submitting: true });
+          try {
+            const { form, id, mode } = this.data;
+            const data = {
+              title: form.title,
+              theme: form.theme,
+              location: form.location,
+              start_date: form.startDate,
+              end_date: form.endDate,
+              leader: form.leader,
+              phone: form.phone,
+              teacher_id: form.teacherId,
+              members: form.members,
+              description: form.description,
+              plan: form.plan,
+              expected_result: form.expectedResult
+            };
+
+            let projectId = id;
+            if (mode === 'create') {
+              const createRes = await projectApi.create(data);
+              projectId = createRes.id;
+            } else {
+              await projectApi.update(id, data);
+            }
+
+            // 提交审批
+            await projectApi.submit(projectId);
+
+            wx.showToast({ title: '提交成功', icon: 'success' });
+            setTimeout(() => {
+              wx.navigateBack();
+            }, 1500);
+          } catch (err) {
+            console.error('提交失败:', err);
+          } finally {
+            this.setData({ submitting: false });
+          }
         }
       }
     });

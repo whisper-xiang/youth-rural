@@ -10,8 +10,9 @@ App({
 
   onLaunch() {
     // 检查本地存储的登录信息
+    const token = wx.getStorageSync('token');
     const userInfo = wx.getStorageSync('userInfo');
-    if (userInfo && userInfo.role) {
+    if (token && userInfo && userInfo.role) {
       this.globalData.userInfo = userInfo;
       this.globalData.role = userInfo.role;
       this.globalData.roleName = userInfo.roleName;
@@ -36,6 +37,7 @@ App({
     this.globalData.roleName = '';
     this.globalData.isLogin = false;
     wx.removeStorageSync('userInfo');
+    wx.removeStorageSync('token');
   },
 
   // 检查是否有某个权限

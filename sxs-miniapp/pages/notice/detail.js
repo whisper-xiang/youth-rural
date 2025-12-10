@@ -1,7 +1,11 @@
+const { noticeApi } = require('../../utils/api');
+const { BASE_URL } = require('../../utils/request');
+
 Page({
   data: {
     id: null,
-    detail: null
+    detail: null,
+    loading: true
   },
 
   onLoad(options) {
@@ -11,48 +15,85 @@ Page({
   },
 
   // 加载详情
-  loadDetail(id) {
-    // TODO: 替换为实际接口调用
-    const mockDetail = {
-      id: '1',
-      type: 'notice',
-      typeName: '通知',
-      title: '关于开展2025年暑期"三下乡"社会实践活动的通知',
-      source: '校团委',
-      publishTime: '2025-06-01 10:00',
-      viewCount: 1256,
-      isCollected: false,
-      content: `<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">各学院团委、各学生组织：</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">为深入学习贯彻习近平新时代中国特色社会主义思想，引导广大青年学生在社会实践中受教育、长才干、作贡献，现就开展2025年暑期"三下乡"社会实践活动通知如下：</p>
-<p style="font-weight: bold; margin: 20px 0 12px;">一、活动主题</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">青春为中国式现代化挺膺担当</p>
-<p style="font-weight: bold; margin: 20px 0 12px;">二、活动时间</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">2025年7月1日至8月31日</p>
-<p style="font-weight: bold; margin: 20px 0 12px;">三、活动内容</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">1. 理论普及宣讲</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">2. 乡村振兴促进</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">3. 发展成就观察</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">4. 民族团结实践</p>
-<p style="font-weight: bold; margin: 20px 0 12px;">四、申报要求</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">1. 每支团队人数为5-10人，须配备1名指导教师；</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">2. 团队需于6月15日前完成网上申报；</p>
-<p style="text-indent: 2em; line-height: 2; margin-bottom: 16px;">3. 活动结束后需提交调研报告、活动总结等材料。</p>
-<p style="text-align: right; margin-top: 40px;">校团委</p>
-<p style="text-align: right;">2025年6月1日</p>`,
-      attachments: [
-        { name: '2025年三下乡活动申报表.docx', size: '45KB', type: 'word' },
-        { name: '活动经费预算模板.xlsx', size: '32KB', type: 'excel' },
-        { name: '安全责任书.pdf', size: '128KB', type: 'pdf' }
-      ]
+  async loadDetail(id) {
+    try {
+      const res = await noticeApi.getDetail(id);
+      
+      // 格式化数据
+      const detail = {
+        ...res,
+        typeName: this.getTypeName(res.type),
+        publishTime: res.publish_time || '',
+        viewCount: res.view_count || 0,
+        isCollected: res.isCollected || false,
+        attachments: (res.attachments || []).map(att => ({
+          ...att,
+          name: att.file_name,
+          size: this.formatFileSize(att.file_size),
+          type: this.getFileType(att.file_name),
+          url: att.file_url
+        }))
+      };
+      
+      this.setData({ detail, loading: false });
+    } catch (err) {
+      console.error('加载通知详情失败:', err);
+      this.setData({ loading: false });
+    }
+  },
+
+  // 获取类型名称
+  getTypeName(type) {
+    const map = { notice: '通知', policy: '政策', activity: '活动' };
+    return map[type] || '通知';
+  },
+
+  // 格式化文件大小
+  formatFileSize(bytes) {
+    if (!bytes) return '0B';
+    if (bytes < 1024) return bytes + 'B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+    return (bytes / 1024 / 1024).toFixed(1) + 'MB';
+  },
+
+  // 获取文件类型
+  getFileType(filename) {
+    if (!filename) return 'other';
+    const ext = filename.split('.').pop().toLowerCase();
+    const map = {
+      doc: 'word', docx: 'word',
+      xls: 'excel', xlsx: 'excel',
+      pdf: 'pdf'
     };
-    this.setData({ detail: mockDetail });
+    return map[ext] || 'other';
   },
 
   // 下载附件
   downloadFile(e) {
     const file = e.currentTarget.dataset.file;
-    wx.showToast({ title: '下载: ' + file.name, icon: 'none' });
-    // TODO: 实际下载逻辑
+    const url = file.url.startsWith('http') ? file.url : BASE_URL.replace('/api', '') + file.url;
+    
+    wx.showLoading({ title: '下载中...' });
+    wx.downloadFile({
+      url,
+      success: (res) => {
+        if (res.statusCode === 200) {
+          wx.openDocument({
+            filePath: res.tempFilePath,
+            showMenu: true,
+            success: () => wx.hideLoading(),
+            fail: () => {
+              wx.hideLoading();
+              wx.showToast({ title: '打开失败', icon: 'none' });
+            }
+          });
+        }
+      },
+      fail: () => {
+        wx.hideLoading();
+        wx.showToast({ title: '下载失败', icon: 'none' });
+      }
+    });
   },
 
   // 分享
@@ -64,20 +105,25 @@ Page({
   },
 
   // 收藏/取消收藏
-  toggleCollect() {
-    const detail = this.data.detail;
-    detail.isCollected = !detail.isCollected;
-    this.setData({ detail });
-    wx.showToast({
-      title: detail.isCollected ? '已收藏' : '已取消收藏',
-      icon: 'success'
-    });
+  async toggleCollect() {
+    try {
+      const res = await noticeApi.toggleFavorite(this.data.id);
+      const detail = this.data.detail;
+      detail.isCollected = res.isCollected;
+      this.setData({ detail });
+      wx.showToast({
+        title: res.isCollected ? '已收藏' : '已取消收藏',
+        icon: 'success'
+      });
+    } catch (err) {
+      console.error('收藏操作失败:', err);
+    }
   },
 
   // 分享配置
   onShareAppMessage() {
     return {
-      title: this.data.detail.title,
+      title: this.data.detail?.title || '通知公告',
       path: `/pages/notice/detail?id=${this.data.id}`
     };
   }

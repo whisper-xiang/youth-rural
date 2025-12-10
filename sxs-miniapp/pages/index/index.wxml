@@ -1,41 +1,78 @@
 <view class="page">
   <!-- 顶部 Banner -->
   <view class="banner">
-    <view class="banner-title">大学生暑期"三下乡"</view>
-    <view class="banner-subtitle">活动管理系统</view>
-  </view>
-
-  <!-- 用户信息卡片 -->
-  <view class="user-card" wx:if="{{isLogin}}">
-    <view class="user-avatar">{{userInfo.avatarText}}</view>
-    <view class="user-info">
-      <view class="user-name">{{userInfo.name}}</view>
-      <view class="user-role">{{userInfo.roleName}}</view>
+    <view class="banner-bg"></view>
+    <view class="banner-content">
+      <view class="banner-icon">🌾</view>
+      <view class="banner-text">
+        <view class="banner-title">大学生暑期"三下乡"</view>
+        <view class="banner-subtitle">社会实践活动管理系统</view>
+      </view>
     </view>
-    <view class="switch-role" bindtap="switchRole">切换身份</view>
+    <!-- 用户信息（已登录） -->
+    <view class="banner-user" wx:if="{{isLogin}}">
+      <view class="user-avatar">{{userInfo.avatarText}}</view>
+      <view class="user-info">
+        <view class="user-name">{{userInfo.name}}</view>
+        <view class="user-role">{{userInfo.roleName}}</view>
+      </view>
+      <view class="switch-role" bindtap="switchRole">切换</view>
+    </view>
+    <!-- 登录按钮（未登录） -->
+    <view class="banner-login" wx:else bindtap="goLogin">
+      <view class="login-avatar">👤</view>
+      <view class="login-text">点击登录</view>
+    </view>
   </view>
 
-  <!-- 未登录提示 -->
-  <view class="login-card" wx:else bindtap="goLogin">
-    <view class="login-icon">👤</view>
-    <view class="login-text">点击登录，选择您的身份</view>
-    <view class="login-arrow">›</view>
+  <!-- 快捷统计 -->
+  <view class="quick-stats" wx:if="{{isLogin}}">
+    <view class="stat-item">
+      <view class="stat-num">{{stats.projectCount || 12}}</view>
+      <view class="stat-label">进行中项目</view>
+    </view>
+    <view class="stat-item">
+      <view class="stat-num">{{stats.pendingCount || 3}}</view>
+      <view class="stat-label">待处理</view>
+    </view>
+    <view class="stat-item">
+      <view class="stat-num">{{stats.noticeCount || 5}}</view>
+      <view class="stat-label">新通知</view>
+    </view>
   </view>
 
   <!-- 功能模块入口 -->
-  <view class="module-section">
-    <view class="section-title">功能模块</view>
+  <view class="module-section" wx:if="{{modules.length > 0}}">
+    <view class="section-header">
+      <view class="section-title">功能模块</view>
+      <view class="section-hint">根据您的身份显示</view>
+    </view>
     <view class="module-grid">
       <view class="module-card" wx:for="{{modules}}" wx:key="key" bindtap="goToPage" data-url="{{item.url}}">
-        <view class="module-icon {{item.icon}}"></view>
-        <view class="module-name">{{item.name}}</view>
-        <view class="module-desc">{{item.desc}}</view>
+        <view class="module-icon-wrap">
+          <view class="module-icon {{item.icon}}"></view>
+        </view>
+        <view class="module-info">
+          <view class="module-name">{{item.name}}</view>
+          <view class="module-desc">{{item.desc}}</view>
+        </view>
+        <view class="module-arrow">›</view>
       </view>
     </view>
   </view>
 
+  <!-- 未登录提示 -->
+  <view class="empty-section" wx:if="{{!isLogin}}">
+    <view class="empty-icon">🔐</view>
+    <view class="empty-title">请先登录</view>
+    <view class="empty-desc">登录后可查看您的功能模块</view>
+    <view class="empty-btn" bindtap="goLogin">立即登录</view>
+  </view>
+
   <!-- 无模块提示 -->
-  <view class="empty-tip" wx:if="{{modules.length === 0 && isLogin}}">
-    <text>当前角色暂无可用功能模块</text>
+  <view class="empty-section" wx:if="{{modules.length === 0 && isLogin}}">
+    <view class="empty-icon">📋</view>
+    <view class="empty-title">暂无可用模块</view>
+    <view class="empty-desc">当前角色暂无可用功能模块</view>
   </view>
 </view>

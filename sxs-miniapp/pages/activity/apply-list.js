@@ -1,54 +1,68 @@
+const { projectApi } = require('../../utils/api');
+
 Page({
   data: {
-    list: []
+    list: [],
+    page: 1,
+    pageSize: 10,
+    hasMore: true,
+    loading: false
   },
 
   onLoad() {
-    this.loadList();
+    this.loadList(true);
   },
 
   onShow() {
     // 每次显示时刷新列表
-    this.loadList();
+    this.loadList(true);
+  },
+
+  onPullDownRefresh() {
+    this.loadList(true);
+  },
+
+  onReachBottom() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.loadList(false);
+    }
   },
 
   // 加载申报列表
-  loadList() {
-    // TODO: 替换为实际接口调用
-    // 模拟数据
-    const mockList = [
-      {
-        id: '1',
-        title: '乡村振兴调研实践',
-        leader: '张三',
-        memberCount: 5,
-        location: '湖南省长沙市',
-        status: 'pending',
-        statusText: '待审核',
-        createTime: '2025-06-01'
-      },
-      {
-        id: '2',
-        title: '支教助学志愿服务',
-        leader: '李四',
-        memberCount: 8,
-        location: '贵州省遵义市',
-        status: 'approved',
-        statusText: '已通过',
-        createTime: '2025-05-28'
-      },
-      {
-        id: '3',
-        title: '红色文化寻访',
-        leader: '王五',
-        memberCount: 6,
-        location: '江西省井冈山',
-        status: 'rejected',
-        statusText: '已驳回',
-        createTime: '2025-05-20'
-      }
-    ];
-    this.setData({ list: mockList });
+  async loadList(refresh = false) {
+    if (this.data.loading) return;
+
+    const currentPage = refresh ? 1 : this.data.page;
+    this.setData({ loading: true });
+
+    try {
+      const res = await projectApi.getList({
+        page: currentPage,
+        pageSize: this.data.pageSize
+      });
+
+      const statusMap = {
+        draft: '草稿', pending: '待审核', college_approved: '学院已审',
+        approved: '已通过', rejected: '已驳回'
+      };
+
+      const newList = res.list.map(item => ({
+        ...item,
+        statusText: statusMap[item.status] || item.status,
+        createTime: item.created_at ? item.created_at.slice(0, 10) : ''
+      }));
+
+      this.setData({
+        list: refresh ? newList : [...this.data.list, ...newList],
+        page: currentPage + 1,
+        hasMore: newList.length === this.data.pageSize
+      });
+    } catch (err) {
+      console.error('加载项目列表失败:', err);
+    } finally {
+      this.setData({ loading: false });
+      wx.stopPullDownRefresh();
+    }
   },
 
   // 新建申报

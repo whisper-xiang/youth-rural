@@ -1,92 +1,74 @@
+const { evaluationApi } = require('../../utils/api');
+
 Page({
   data: {
     currentTab: 'all',
-    tabName: '',
     list: [],
-    filteredList: []
+    page: 1,
+    pageSize: 10,
+    hasMore: true,
+    loading: false
   },
 
   onLoad() {
-    this.loadList();
+    this.loadList(true);
   },
 
   onShow() {
-    this.loadList();
+    this.loadList(true);
+  },
+
+  onPullDownRefresh() {
+    this.loadList(true);
+  },
+
+  onReachBottom() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.loadList(false);
+    }
   },
 
   // 加载评优列表
-  loadList() {
-    // TODO: 替换为实际接口调用
-    const mockList = [
-      {
-        id: '1',
-        title: '望城区乡村振兴调研报告',
-        teamName: '青春筑梦队',
-        college: '经济管理学院',
-        theme: '乡村振兴',
-        status: 'pending',
-        statusText: '待评审',
-        myScore: null
-      },
-      {
-        id: '2',
-        title: '山区支教实践纪实',
-        teamName: '爱心支教团',
-        college: '教育学院',
-        theme: '支教助学',
-        status: 'evaluated',
-        statusText: '已评审',
-        myScore: 92
-      },
-      {
-        id: '3',
-        title: '井冈山红色文化寻访记',
-        teamName: '红色足迹队',
-        college: '马克思主义学院',
-        theme: '红色文化',
-        status: 'pending',
-        statusText: '待评审',
-        myScore: null
-      },
-      {
-        id: '4',
-        title: '农村电商助农实践',
-        teamName: '科技兴农队',
-        college: '农学院',
-        theme: '科技支农',
-        status: 'evaluated',
-        statusText: '已评审',
-        myScore: 88
-      }
-    ];
-    this.setData({ list: mockList });
-    this.filterList();
+  async loadList(refresh = false) {
+    if (this.data.loading) return;
+
+    const { currentTab, pageSize } = this.data;
+    const currentPage = refresh ? 1 : this.data.page;
+    this.setData({ loading: true });
+
+    try {
+      const res = await evaluationApi.getList({
+        page: currentPage,
+        pageSize,
+        status: currentTab === 'all' ? '' : currentTab
+      });
+
+      const newList = res.list.map(item => ({
+        ...item,
+        statusText: item.my_score ? '已评审' : '待评审',
+        status: item.my_score ? 'evaluated' : 'pending',
+        myScore: item.my_score
+      }));
+
+      this.setData({
+        list: refresh ? newList : [...this.data.list, ...newList],
+        page: currentPage + 1,
+        hasMore: newList.length === pageSize
+      });
+    } catch (err) {
+      console.error('加载评优列表失败:', err);
+    } finally {
+      this.setData({ loading: false });
+      wx.stopPullDownRefresh();
+    }
   },
 
   // 切换标签
   switchTab(e) {
     const tab = e.currentTarget.dataset.tab;
-    this.setData({ currentTab: tab });
-    this.filterList();
-  },
-
-  // 筛选列表
-  filterList() {
-    const { currentTab, list } = this.data;
-    let filteredList = list;
-    let tabName = '';
-
-    if (currentTab !== 'all') {
-      filteredList = list.filter(item => item.status === currentTab);
-    }
-
-    switch (currentTab) {
-      case 'pending': tabName = '待评审'; break;
-      case 'evaluated': tabName = '已评审'; break;
-      default: tabName = '';
-    }
-
-    this.setData({ filteredList, tabName });
+    if (tab === this.data.currentTab) return;
+    this.setData({ currentTab: tab, list: [], page: 1, hasMore: true });
+    this.loadList(true);
   },
 
   // 查看详情

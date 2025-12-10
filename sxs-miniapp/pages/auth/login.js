@@ -1,15 +1,18 @@
 const app = getApp();
+const { authApi } = require('../../utils/api');
 
 Page({
   data: {
     selectedRole: '',
-    roles: {
-      student: { name: '学生/团队负责人', mockName: '张三' },
-      teacher: { name: '指导教师', mockName: '李教授' },
-      college_admin: { name: '学院管理员', mockName: '王主任' },
-      school_admin: { name: '校级管理员', mockName: '赵处长' },
-      expert: { name: '评审专家', mockName: '陈教授' }
-    }
+    // 测试账号对应关系
+    testAccounts: {
+      student: { username: '2021001', password: '123456' },
+      teacher: { username: 'T001', password: '123456' },
+      college_admin: { username: 'CA001', password: '123456' },
+      school_admin: { username: 'admin', password: '123456' },
+      expert: { username: 'E001', password: '123456' }
+    },
+    loading: false
   },
 
   onLoad() {
@@ -26,28 +29,41 @@ Page({
   },
 
   // 登录
-  doLogin() {
-    const { selectedRole, roles } = this.data;
+  async doLogin() {
+    const { selectedRole, testAccounts, loading } = this.data;
+    
+    if (loading) return;
+    
     if (!selectedRole) {
       wx.showToast({ title: '请选择身份', icon: 'none' });
       return;
     }
 
-    const roleInfo = roles[selectedRole];
-    const userInfo = {
-      name: roleInfo.mockName,
-      role: selectedRole,
-      roleName: roleInfo.name,
-      college: '经济管理学院',
-      phone: '13800138000'
-    };
+    const account = testAccounts[selectedRole];
+    this.setData({ loading: true });
 
-    // 保存用户信息
-    app.setUserInfo(userInfo);
+    try {
+      // 调用登录接口
+      const res = await authApi.login({
+        username: account.username,
+        password: account.password
+      });
 
-    wx.showToast({ title: '登录成功', icon: 'success' });
-    setTimeout(() => {
-      wx.switchTab({ url: '/pages/index/index' });
-    }, 1000);
+      // 保存 token
+      wx.setStorageSync('token', res.token);
+
+      // 保存用户信息到全局
+      app.setUserInfo(res.userInfo);
+
+      wx.showToast({ title: '登录成功', icon: 'success' });
+      setTimeout(() => {
+        wx.switchTab({ url: '/pages/index/index' });
+      }, 1000);
+
+    } catch (err) {
+      console.error('登录失败:', err);
+    } finally {
+      this.setData({ loading: false });
+    }
   }
 });

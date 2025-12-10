@@ -1,79 +1,82 @@
+const { resultApi } = require('../../utils/api');
+const { BASE_URL } = require('../../utils/request');
+
 Page({
   data: {
     categories: ['乡村振兴', '支教助学', '红色文化', '科技支农', '医疗卫生'],
     currentCategory: '',
     list: [],
-    filteredList: []
+    page: 1,
+    pageSize: 10,
+    hasMore: true,
+    loading: false
   },
 
   onLoad() {
-    this.loadList();
+    this.loadList(true);
   },
 
   onShow() {
-    this.loadList();
+    this.loadList(true);
+  },
+
+  onPullDownRefresh() {
+    this.loadList(true);
+  },
+
+  onReachBottom() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.loadList(false);
+    }
   },
 
   // 加载成果列表
-  loadList() {
-    // TODO: 替换为实际接口调用
-    const mockList = [
-      {
-        id: '1',
-        title: '望城区乡村振兴调研报告',
-        teamName: '青春筑梦队',
-        college: '经济管理学院',
-        category: '乡村振兴',
-        cover: '/images/cover1.jpg',
-        summary: '通过为期两周的实地调研，深入了解望城区乡村振兴战略实施情况，形成调研报告并提出发展建议。',
-        submitDate: '2025-07-20',
-        fileCount: 3,
-        viewCount: 128
-      },
-      {
-        id: '2',
-        title: '山区支教实践纪实',
-        teamName: '爱心支教团',
-        college: '教育学院',
-        category: '支教助学',
-        cover: '/images/cover2.jpg',
-        summary: '记录在贵州山区开展支教活动的全过程，包括教学设计、学生互动、成果展示等内容。',
-        submitDate: '2025-07-18',
-        fileCount: 5,
-        viewCount: 256
-      },
-      {
-        id: '3',
-        title: '井冈山红色文化寻访记',
-        teamName: '红色足迹队',
-        college: '马克思主义学院',
-        category: '红色文化',
-        cover: '/images/cover3.jpg',
-        summary: '追寻革命先辈足迹，探访井冈山革命根据地，传承红色基因，弘扬革命精神。',
-        submitDate: '2025-07-15',
-        fileCount: 4,
-        viewCount: 189
-      }
-    ];
-    this.setData({ list: mockList });
-    this.filterList();
+  async loadList(refresh = false) {
+    if (this.data.loading) return;
+
+    const { currentCategory, pageSize } = this.data;
+    const currentPage = refresh ? 1 : this.data.page;
+    this.setData({ loading: true });
+
+    try {
+      const res = await resultApi.getList({
+        page: currentPage,
+        pageSize,
+        category: currentCategory
+      });
+
+      const baseUrl = BASE_URL.replace('/api', '');
+      const newList = res.list.map(item => ({
+        ...item,
+        cover: item.cover_url ? (item.cover_url.startsWith('http') ? item.cover_url : baseUrl + item.cover_url) : '',
+        submitDate: item.created_at ? item.created_at.slice(0, 10) : '',
+        fileCount: item.file_count || 0,
+        viewCount: item.view_count || 0
+      }));
+
+      this.setData({
+        list: refresh ? newList : [...this.data.list, ...newList],
+        page: currentPage + 1,
+        hasMore: newList.length === pageSize
+      });
+    } catch (err) {
+      console.error('加载成果列表失败:', err);
+    } finally {
+      this.setData({ loading: false });
+      wx.stopPullDownRefresh();
+    }
   },
 
   // 切换分类
   switchCategory(e) {
     const category = e.currentTarget.dataset.category;
-    this.setData({ currentCategory: category });
-    this.filterList();
-  },
-
-  // 筛选列表
-  filterList() {
-    const { currentCategory, list } = this.data;
-    let filteredList = list;
-    if (currentCategory) {
-      filteredList = list.filter(item => item.category === currentCategory);
+    if (category === this.data.currentCategory) {
+      this.setData({ currentCategory: '' });
+    } else {
+      this.setData({ currentCategory: category });
     }
-    this.setData({ filteredList });
+    this.setData({ list: [], page: 1, hasMore: true });
+    this.loadList(true);
   },
 
   // 提交成果

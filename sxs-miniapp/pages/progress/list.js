@@ -1,52 +1,66 @@
+const { progressApi } = require('../../utils/api');
+const { BASE_URL } = require('../../utils/request');
+
 Page({
   data: {
-    list: []
+    list: [],
+    page: 1,
+    pageSize: 10,
+    hasMore: true,
+    loading: false
   },
 
   onLoad() {
-    this.loadList();
+    this.loadList(true);
   },
 
   onShow() {
-    this.loadList();
+    this.loadList(true);
+  },
+
+  onPullDownRefresh() {
+    this.loadList(true);
+  },
+
+  onReachBottom() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.loadList(false);
+    }
   },
 
   // 加载进度列表
-  loadList() {
-    // TODO: 替换为实际接口调用
-    const mockList = [
-      {
-        id: '1',
-        title: '第一周调研启动',
-        date: '2025-07-03',
-        summary: '团队抵达望城区，与当地村委会对接，了解基本情况，制定详细调研计划。',
-        images: ['/images/demo1.jpg', '/images/demo2.jpg', '/images/demo3.jpg'],
-        imageCount: 5,
-        uploader: '张三',
-        teamName: '青春筑梦队'
-      },
-      {
-        id: '2',
-        title: '入户走访调研',
-        date: '2025-07-05',
-        summary: '深入农户家中进行问卷调查和访谈，收集一手资料，了解村民实际需求。',
-        images: ['/images/demo1.jpg', '/images/demo2.jpg'],
-        imageCount: 2,
-        uploader: '李四',
-        teamName: '青春筑梦队'
-      },
-      {
-        id: '3',
-        title: '数据整理与分析',
-        date: '2025-07-10',
-        summary: '对收集的问卷和访谈资料进行整理分析，初步形成调研报告框架。',
-        images: [],
-        imageCount: 0,
-        uploader: '王五',
-        teamName: '青春筑梦队'
-      }
-    ];
-    this.setData({ list: mockList });
+  async loadList(refresh = false) {
+    if (this.data.loading) return;
+
+    const currentPage = refresh ? 1 : this.data.page;
+    this.setData({ loading: true });
+
+    try {
+      const res = await progressApi.getList({
+        page: currentPage,
+        pageSize: this.data.pageSize
+      });
+
+      const baseUrl = BASE_URL.replace('/api', '');
+      const newList = res.list.map(item => ({
+        ...item,
+        date: item.progress_date ? item.progress_date.slice(0, 10) : '',
+        summary: item.content ? item.content.slice(0, 100) : '',
+        images: (item.images || []).map(img => img.startsWith('http') ? img : baseUrl + img),
+        imageCount: (item.images || []).length
+      }));
+
+      this.setData({
+        list: refresh ? newList : [...this.data.list, ...newList],
+        page: currentPage + 1,
+        hasMore: newList.length === this.data.pageSize
+      });
+    } catch (err) {
+      console.error('加载进度列表失败:', err);
+    } finally {
+      this.setData({ loading: false });
+      wx.stopPullDownRefresh();
+    }
   },
 
   // 上传进度

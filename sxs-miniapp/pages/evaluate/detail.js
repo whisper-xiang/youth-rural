@@ -1,3 +1,6 @@
+const { evaluationApi } = require('../../utils/api');
+const { BASE_URL } = require('../../utils/request');
+
 Page({
   data: {
     id: null,
@@ -10,7 +13,8 @@ Page({
       { key: 'presentation', name: '材料规范性', weight: 15, max: 15, value: 10 }
     ],
     totalScore: 75,
-    comment: ''
+    comment: '',
+    submitting: false
   },
 
   onLoad(options) {
@@ -20,29 +24,37 @@ Page({
   },
 
   // 加载详情
-  loadDetail(id) {
-    // TODO: 替换为实际接口调用
-    const mockDetail = {
-      id: '1',
-      title: '望城区乡村振兴调研报告',
-      teamName: '青春筑梦队',
-      college: '经济管理学院',
-      theme: '乡村振兴',
-      leader: '张三',
-      description: '本项目深入湖南省长沙市望城区多个乡村，通过问卷调查、入户访谈、座谈会等形式，全面了解当地乡村振兴战略实施情况，形成调研报告并提出发展建议。项目团队由5名学生和1名指导教师组成，历时两周完成实地调研。',
-      materials: [
-        { name: '调研报告.pdf', size: '2.5MB', type: 'pdf' },
-        { name: '数据分析.xlsx', size: '1.2MB', type: 'excel' },
-        { name: '活动视频.mp4', size: '45MB', type: 'video' },
-        { name: '活动照片集.zip', size: '28MB', type: 'zip' }
-      ],
-      isEvaluated: false,
-      myScore: null,
-      myComment: '',
-      evaluateTime: ''
-    };
-    this.setData({ detail: mockDetail });
-    this.calculateTotal();
+  async loadDetail(id) {
+    try {
+      const res = await evaluationApi.getDetail(id);
+      const baseUrl = BASE_URL.replace('/api', '');
+      
+      const detail = {
+        ...res,
+        materials: (res.materials || []).map(m => ({
+          ...m,
+          url: m.file_url ? (m.file_url.startsWith('http') ? m.file_url : baseUrl + m.file_url) : ''
+        })),
+        isEvaluated: !!res.my_score,
+        myScore: res.my_score,
+        myComment: res.my_comment || '',
+        evaluateTime: res.evaluate_time || ''
+      };
+
+      // 如果已评审，设置分数
+      if (res.score_detail) {
+        const scoreItems = this.data.scoreItems.map(item => ({
+          ...item,
+          value: res.score_detail[item.key] || item.value
+        }));
+        this.setData({ scoreItems, comment: res.my_comment || '' });
+      }
+
+      this.setData({ detail });
+      this.calculateTotal();
+    } catch (err) {
+      console.error('加载评优详情失败:', err);
+    }
   },
 
   // 评分变化
@@ -87,16 +99,36 @@ Page({
     wx.showModal({
       title: '确认提交',
       content: `确定提交评审吗？\n评分：${this.data.totalScore}分`,
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          // TODO: 调用接口
-          const detail = this.data.detail;
-          detail.isEvaluated = true;
-          detail.myScore = this.data.totalScore;
-          detail.myComment = this.data.comment;
-          detail.evaluateTime = this.formatDate(new Date());
-          this.setData({ detail });
-          wx.showToast({ title: '评审成功', icon: 'success' });
+          if (this.data.submitting) return;
+          this.setData({ submitting: true });
+
+          try {
+            // 构建评分详情
+            const scoreDetail = {};
+            this.data.scoreItems.forEach(item => {
+              scoreDetail[item.key] = item.value;
+            });
+
+            await evaluationApi.submitScore(this.data.id, {
+              score: this.data.totalScore,
+              score_detail: scoreDetail,
+              comment: this.data.comment
+            });
+
+            const detail = this.data.detail;
+            detail.isEvaluated = true;
+            detail.myScore = this.data.totalScore;
+            detail.myComment = this.data.comment;
+            detail.evaluateTime = this.formatDate(new Date());
+            this.setData({ detail });
+            wx.showToast({ title: '评审成功', icon: 'success' });
+          } catch (err) {
+            console.error('提交评审失败:', err);
+          } finally {
+            this.setData({ submitting: false });
+          }
         }
       }
     });

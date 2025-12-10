@@ -1,4 +1,5 @@
 const app = getApp();
+const { userApi, noticeApi } = require('../../utils/api');
 
 Page({
   data: {
@@ -38,14 +39,11 @@ Page({
           roleName: userInfo.roleName,
           avatarText: userInfo.name.slice(0, 1)
         },
-        stats: {
-          applyCount: 3,
-          progressCount: 5,
-          resultCount: 2
-        },
-        unreadCount: 2,
         menuItems
       });
+      // 加载统计数据
+      this.loadStats();
+      this.loadUnreadCount();
     } else {
       this.setData({
         isLogin: false,
@@ -58,6 +56,32 @@ Page({
         unreadCount: 0,
         menuItems: []
       });
+    }
+  },
+
+  // 加载统计数据
+  async loadStats() {
+    try {
+      const stats = await userApi.getStats();
+      this.setData({
+        stats: {
+          applyCount: stats.projectCount || 0,
+          progressCount: stats.progressCount || 0,
+          resultCount: stats.resultCount || 0
+        }
+      });
+    } catch (err) {
+      console.error('加载统计数据失败:', err);
+    }
+  },
+
+  // 加载未读消息数
+  async loadUnreadCount() {
+    try {
+      const res = await noticeApi.getUnreadCount();
+      this.setData({ unreadCount: res.count || 0 });
+    } catch (err) {
+      console.error('加载未读数失败:', err);
     }
   },
 

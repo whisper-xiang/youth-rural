@@ -1,3 +1,6 @@
+const { progressApi } = require('../../utils/api');
+const { uploadImage, BASE_URL } = require('../../utils/request');
+
 Page({
   data: {
     mode: 'create',
@@ -8,16 +11,19 @@ Page({
       title: '',
       date: '',
       content: '',
-      images: []
-    }
+      images: [],
+      projectId: ''
+    },
+    submitting: false
   },
 
   onLoad(options) {
-    const { mode = 'create', id } = options;
+    const { mode = 'create', id, projectId } = options;
     this.setData({
       mode,
       isView: mode === 'view',
-      id
+      id,
+      'form.projectId': projectId || ''
     });
 
     if (mode === 'view' && id) {
@@ -30,25 +36,23 @@ Page({
   },
 
   // 加载详情
-  loadDetail(id) {
-    // TODO: 替换为实际接口调用
-    const mockDetail = {
-      id: '1',
-      title: '第一周调研启动',
-      date: '2025-07-03',
-      uploader: '张三',
-      teamName: '青春筑梦队',
-      content: '团队于7月3日抵达湖南省长沙市望城区，与当地村委会进行了对接。\n\n主要工作内容：\n1. 与村委会主任座谈，了解村庄基本情况\n2. 实地考察村庄环境和基础设施\n3. 制定详细的调研计划和分工\n4. 安排住宿和后勤保障\n\n下一步计划：\n明天开始入户走访，进行问卷调查和深度访谈。',
-      images: ['/images/demo1.jpg', '/images/demo2.jpg', '/images/demo3.jpg', '/images/demo4.jpg', '/images/demo5.jpg'],
-      comments: [
-        {
-          user: '李教授',
-          content: '调研计划安排合理，注意做好访谈记录。',
-          time: '2025-07-03 18:30'
-        }
-      ]
-    };
-    this.setData({ detail: mockDetail });
+  async loadDetail(id) {
+    try {
+      const res = await progressApi.getDetail(id);
+      const baseUrl = BASE_URL.replace('/api', '');
+      const detail = {
+        ...res,
+        date: res.progress_date ? res.progress_date.slice(0, 10) : '',
+        images: (res.images || []).map(img => img.startsWith('http') ? img : baseUrl + img),
+        comments: (res.comments || []).map(c => ({
+          ...c,
+          time: c.created_at ? c.created_at.slice(0, 16).replace('T', ' ') : ''
+        }))
+      };
+      this.setData({ detail });
+    } catch (err) {
+      console.error('加载进度详情失败:', err);
+    }
   },
 
   // 输入框变化
@@ -118,13 +122,42 @@ Page({
   },
 
   // 提交
-  submitForm() {
+  async submitForm() {
     if (!this.validateForm()) return;
+    if (this.data.submitting) return;
 
-    // TODO: 调用接口上传
-    wx.showToast({ title: '提交成功', icon: 'success' });
-    setTimeout(() => {
-      wx.navigateBack();
-    }, 1500);
+    this.setData({ submitting: true });
+
+    try {
+      const { form } = this.data;
+      
+      // 上传图片
+      const imageUrls = [];
+      for (const img of form.images) {
+        if (img.startsWith('http')) {
+          imageUrls.push(img);
+        } else {
+          const url = await uploadImage(img);
+          imageUrls.push(url);
+        }
+      }
+
+      await progressApi.create({
+        project_id: form.projectId,
+        title: form.title,
+        progress_date: form.date,
+        content: form.content,
+        images: imageUrls
+      });
+
+      wx.showToast({ title: '提交成功', icon: 'success' });
+      setTimeout(() => {
+        wx.navigateBack();
+      }, 1500);
+    } catch (err) {
+      console.error('提交进度失败:', err);
+    } finally {
+      this.setData({ submitting: false });
+    }
   }
 });
