@@ -1,4 +1,48 @@
-<view class="container">
-  <view class="title">评优项目列表</view>
-  <view class="desc">展示参与评优的项目，评审专家可进入详情进行打分和评价。</view>
+<view class="page">
+  <!-- 顶部筛选栏 -->
+  <view class="tabs">
+    <view class="tab {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
+    <view class="tab {{currentTab === 'pending' ? 'active' : ''}}" bindtap="switchTab" data-tab="pending">待评审</view>
+    <view class="tab {{currentTab === 'evaluated' ? 'active' : ''}}" bindtap="switchTab" data-tab="evaluated">已评审</view>
+  </view>
+
+  <!-- 评优列表 -->
+  <view class="list" wx:if="{{filteredList.length > 0}}">
+    <view class="card" wx:for="{{filteredList}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="card-header">
+        <view class="card-title">{{item.title}}</view>
+        <view class="card-status status-{{item.status}}">{{item.statusText}}</view>
+      </view>
+      <view class="card-body">
+        <view class="info-row">
+          <text class="info-label">团队名称：</text>
+          <text class="info-value">{{item.teamName}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">所属学院：</text>
+          <text class="info-value">{{item.college}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">项目主题：</text>
+          <text class="info-value">{{item.theme}}</text>
+        </view>
+      </view>
+      <!-- 已评审显示分数 -->
+      <view class="card-score" wx:if="{{item.status === 'evaluated'}}">
+        <view class="score-label">我的评分</view>
+        <view class="score-value">{{item.myScore}}</view>
+        <view class="score-total">/ 100</view>
+      </view>
+      <!-- 待评审显示按钮 -->
+      <view class="card-action" wx:if="{{item.status === 'pending'}}">
+        <view class="btn-evaluate">立即评审</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:else>
+    <view class="empty-icon">⭐</view>
+    <view class="empty-text">暂无{{tabName}}项目</view>
+  </view>
 </view>

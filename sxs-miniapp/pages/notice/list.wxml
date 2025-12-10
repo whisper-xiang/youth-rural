@@ -1,4 +1,35 @@
-<view class="container">
-  <view class="title">通知公告</view>
-  <view class="desc">用于发布“三下乡”活动相关通知、政策文件和公告信息。</view>
+<view class="page">
+  <!-- 顶部分类 -->
+  <view class="tabs">
+    <view class="tab {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
+    <view class="tab {{currentTab === 'notice' ? 'active' : ''}}" bindtap="switchTab" data-tab="notice">通知</view>
+    <view class="tab {{currentTab === 'policy' ? 'active' : ''}}" bindtap="switchTab" data-tab="policy">政策</view>
+    <view class="tab {{currentTab === 'activity' ? 'active' : ''}}" bindtap="switchTab" data-tab="activity">活动</view>
+  </view>
+
+  <!-- 通知列表 -->
+  <view class="list" wx:if="{{filteredList.length > 0}}">
+    <view class="notice-item {{item.isRead ? '' : 'unread'}}" wx:for="{{filteredList}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="notice-dot" wx:if="{{!item.isRead}}"></view>
+      <view class="notice-content">
+        <view class="notice-header">
+          <view class="notice-tag tag-{{item.type}}">{{item.typeName}}</view>
+          <view class="notice-top" wx:if="{{item.isTop}}">置顶</view>
+        </view>
+        <view class="notice-title">{{item.title}}</view>
+        <view class="notice-summary">{{item.summary}}</view>
+        <view class="notice-footer">
+          <text class="notice-source">{{item.source}}</text>
+          <text class="notice-time">{{item.publishTime}}</text>
+        </view>
+      </view>
+      <view class="notice-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:else>
+    <view class="empty-icon">📢</view>
+    <view class="empty-text">暂无{{tabName}}消息</view>
+  </view>
 </view>

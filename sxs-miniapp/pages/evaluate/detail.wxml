@@ -1,4 +1,95 @@
-<view class="container">
-  <view class="title">评优详情</view>
-  <view class="desc">评审专家查看项目材料并进行在线评分和填写评语。</view>
+<view class="page">
+  <!-- 项目信息 -->
+  <view class="section">
+    <view class="project-title">{{detail.title}}</view>
+    <view class="project-meta">
+      <view class="meta-row">
+        <text class="meta-label">团队名称：</text>
+        <text class="meta-value">{{detail.teamName}}</text>
+      </view>
+      <view class="meta-row">
+        <text class="meta-label">所属学院：</text>
+        <text class="meta-value">{{detail.college}}</text>
+      </view>
+      <view class="meta-row">
+        <text class="meta-label">项目主题：</text>
+        <text class="meta-value">{{detail.theme}}</text>
+      </view>
+      <view class="meta-row">
+        <text class="meta-label">负责人：</text>
+        <text class="meta-value">{{detail.leader}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 项目简介 -->
+  <view class="section">
+    <view class="section-title">项目简介</view>
+    <view class="project-desc">{{detail.description}}</view>
+  </view>
+
+  <!-- 成果材料 -->
+  <view class="section">
+    <view class="section-title">成果材料</view>
+    <view class="material-list">
+      <view class="material-item" wx:for="{{detail.materials}}" wx:key="index" bindtap="viewMaterial" data-item="{{item}}">
+        <view class="material-icon material-{{item.type}}"></view>
+        <view class="material-info">
+          <view class="material-name">{{item.name}}</view>
+          <view class="material-size">{{item.size}}</view>
+        </view>
+        <view class="material-action">查看</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 评分区域（待评审显示） -->
+  <view class="section" wx:if="{{!detail.isEvaluated}}">
+    <view class="section-title">项目评分</view>
+    
+    <!-- 评分维度 -->
+    <view class="score-item" wx:for="{{scoreItems}}" wx:key="key">
+      <view class="score-header">
+        <text class="score-name">{{item.name}}</text>
+        <text class="score-weight">（{{item.weight}}分）</text>
+      </view>
+      <view class="score-slider">
+        <slider min="0" max="{{item.max}}" value="{{item.value}}" activeColor="#2b5aed" block-size="20" bindchange="onScoreChange" data-key="{{item.key}}" />
+        <text class="score-current">{{item.value}}</text>
+      </view>
+    </view>
+
+    <!-- 总分 -->
+    <view class="total-score">
+      <text class="total-label">总分：</text>
+      <text class="total-value">{{totalScore}}</text>
+      <text class="total-max">/ 100</text>
+    </view>
+
+    <!-- 评语 -->
+    <view class="comment-area">
+      <view class="comment-label">评审意见</view>
+      <textarea class="comment-input" placeholder="请输入评审意见和建议" bindinput="onCommentInput" value="{{comment}}" />
+    </view>
+  </view>
+
+  <!-- 已评审结果 -->
+  <view class="section" wx:if="{{detail.isEvaluated}}">
+    <view class="section-title">我的评审</view>
+    <view class="result-score">
+      <text class="result-label">评分：</text>
+      <text class="result-value">{{detail.myScore}}</text>
+      <text class="result-max">/ 100</text>
+    </view>
+    <view class="result-comment">
+      <text class="result-label">评语：</text>
+      <text class="result-text">{{detail.myComment}}</text>
+    </view>
+    <view class="result-time">评审时间：{{detail.evaluateTime}}</view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="footer" wx:if="{{!detail.isEvaluated}}">
+    <view class="btn-submit" bindtap="submitEvaluate">提交评审</view>
+  </view>
 </view>
