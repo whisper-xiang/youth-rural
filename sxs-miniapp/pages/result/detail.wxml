@@ -1,4 +1,130 @@
-<view class="container">
-  <view class="title">成果详情</view>
-  <view class="desc">查看某一团队最终成果的详细信息，如论文、报告、视频链接等。</view>
+<view class="page">
+  <!-- 查看模式 -->
+  <block wx:if="{{isView}}">
+    <!-- 封面图 -->
+    <image class="cover" src="{{detail.cover}}" mode="aspectFill" />
+
+    <!-- 基本信息 -->
+    <view class="section">
+      <view class="detail-title">{{detail.title}}</view>
+      <view class="detail-meta">
+        <view class="meta-row">
+          <text class="meta-label">团队：</text>
+          <text class="meta-value team">{{detail.teamName}}</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">学院：</text>
+          <text class="meta-value">{{detail.college}}</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">分类：</text>
+          <text class="meta-value category">{{detail.category}}</text>
+        </view>
+        <view class="meta-row">
+          <text class="meta-label">提交时间：</text>
+          <text class="meta-value">{{detail.submitDate}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 成果简介 -->
+    <view class="section">
+      <view class="section-title">成果简介</view>
+      <view class="detail-content">{{detail.content}}</view>
+    </view>
+
+    <!-- 成果附件 -->
+    <view class="section" wx:if="{{detail.files && detail.files.length > 0}}">
+      <view class="section-title">成果附件</view>
+      <view class="file-list">
+        <view class="file-item" wx:for="{{detail.files}}" wx:key="index" bindtap="previewFile" data-file="{{item}}">
+          <view class="file-icon file-{{item.type}}"></view>
+          <view class="file-info">
+            <view class="file-name">{{item.name}}</view>
+            <view class="file-size">{{item.size}}</view>
+          </view>
+          <view class="file-action">查看</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 成果图片 -->
+    <view class="section" wx:if="{{detail.images && detail.images.length > 0}}">
+      <view class="section-title">成果图片</view>
+      <view class="image-grid">
+        <image class="grid-image" wx:for="{{detail.images}}" wx:key="*this" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-src="{{item}}" />
+      </view>
+    </view>
+  </block>
+
+  <!-- 新建模式 -->
+  <block wx:else>
+    <view class="form">
+      <view class="section">
+        <view class="section-title">成果信息</view>
+        
+        <view class="form-item">
+          <view class="label">成果标题 <text class="required">*</text></view>
+          <input class="input" placeholder="请输入成果标题" value="{{form.title}}" bindinput="onInput" data-field="title" />
+        </view>
+
+        <view class="form-item">
+          <view class="label">成果分类 <text class="required">*</text></view>
+          <picker mode="selector" range="{{categories}}" bindchange="onCategoryChange">
+            <view class="picker {{form.category ? '' : 'placeholder'}}">{{form.category || '请选择分类'}}</view>
+          </picker>
+        </view>
+
+        <view class="form-item">
+          <view class="label">成果简介 <text class="required">*</text></view>
+          <textarea class="textarea" placeholder="请详细描述成果内容" value="{{form.content}}" bindinput="onInput" data-field="content" />
+        </view>
+      </view>
+
+      <view class="section">
+        <view class="section-title">上传封面</view>
+        <view class="cover-upload" bindtap="chooseCover">
+          <image class="cover-preview" wx:if="{{form.cover}}" src="{{form.cover}}" mode="aspectFill" />
+          <view class="cover-placeholder" wx:else>
+            <text class="placeholder-icon">+</text>
+            <text class="placeholder-text">添加封面图</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="section">
+        <view class="section-title">上传附件</view>
+        <view class="file-upload">
+          <view class="upload-btn" bindtap="chooseFile">
+            <text class="upload-icon">📎</text>
+            <text class="upload-text">添加附件</text>
+          </view>
+          <view class="uploaded-files">
+            <view class="uploaded-item" wx:for="{{form.files}}" wx:key="index">
+              <text class="uploaded-name">{{item.name}}</text>
+              <text class="uploaded-delete" catchtap="deleteFile" data-index="{{index}}">×</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="section">
+        <view class="section-title">上传图片</view>
+        <view class="image-upload">
+          <view class="upload-item" wx:for="{{form.images}}" wx:key="*this">
+            <image class="upload-image" src="{{item}}" mode="aspectFill" />
+            <view class="upload-delete" catchtap="deleteImage" data-index="{{index}}">×</view>
+          </view>
+          <view class="upload-add" bindtap="chooseImage" wx:if="{{form.images.length < 9}}">
+            <text class="add-icon">+</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <view class="btn-submit" bindtap="submitForm">提交成果</view>
+    </view>
+  </block>
 </view>

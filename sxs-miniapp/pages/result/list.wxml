@@ -1,4 +1,47 @@
-<view class="container">
-  <view class="title">成果列表</view>
-  <view class="desc">展示各团队提交的最终成果，支持按学院、主题浏览。</view>
+<view class="page">
+  <!-- 顶部操作栏 -->
+  <view class="header">
+    <view class="header-title">成果展示</view>
+    <view class="btn-add" bindtap="addResult">+ 提交成果</view>
+  </view>
+
+  <!-- 分类筛选 -->
+  <scroll-view class="category-scroll" scroll-x>
+    <view class="category-list">
+      <view class="category-item {{currentCategory === '' ? 'active' : ''}}" bindtap="switchCategory" data-category="">全部</view>
+      <view class="category-item {{currentCategory === item ? 'active' : ''}}" wx:for="{{categories}}" wx:key="*this" bindtap="switchCategory" data-category="{{item}}">{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 成果列表 -->
+  <view class="list" wx:if="{{filteredList.length > 0}}">
+    <view class="card" wx:for="{{filteredList}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image class="card-cover" src="{{item.cover}}" mode="aspectFill" />
+      <view class="card-content">
+        <view class="card-title">{{item.title}}</view>
+        <view class="card-meta">
+          <text class="meta-team">{{item.teamName}}</text>
+          <text class="meta-category">{{item.category}}</text>
+        </view>
+        <view class="card-desc">{{item.summary}}</view>
+        <view class="card-footer">
+          <view class="footer-info">
+            <text class="info-college">{{item.college}}</text>
+            <text class="info-date">{{item.submitDate}}</text>
+          </view>
+          <view class="footer-stats">
+            <text class="stat-item">📄 {{item.fileCount}}</text>
+            <text class="stat-item">👁 {{item.viewCount}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:else>
+    <view class="empty-icon">📁</view>
+    <view class="empty-text">暂无成果</view>
+    <view class="empty-hint">点击右上角提交活动成果</view>
+  </view>
 </view>

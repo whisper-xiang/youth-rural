@@ -1,4 +1,85 @@
-<view class="container">
-  <view class="title">进度详情</view>
-  <view class="desc">查看某一阶段进展的详细信息，如日志、照片、调研报告等。</view>
+<view class="page">
+  <!-- 查看模式 -->
+  <block wx:if="{{isView}}">
+    <!-- 基本信息 -->
+    <view class="section">
+      <view class="detail-header">
+        <view class="detail-title">{{detail.title}}</view>
+        <view class="detail-date">{{detail.date}}</view>
+      </view>
+      <view class="detail-meta">
+        <text class="meta-item">上传人：{{detail.uploader}}</text>
+        <text class="meta-item">团队：{{detail.teamName}}</text>
+      </view>
+    </view>
+
+    <!-- 进度内容 -->
+    <view class="section">
+      <view class="section-title">进度内容</view>
+      <view class="detail-content">{{detail.content}}</view>
+    </view>
+
+    <!-- 图片 -->
+    <view class="section" wx:if="{{detail.images && detail.images.length > 0}}">
+      <view class="section-title">活动照片</view>
+      <view class="image-grid">
+        <image class="grid-image" wx:for="{{detail.images}}" wx:key="*this" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-src="{{item}}" />
+      </view>
+    </view>
+
+    <!-- 管理员留言 -->
+    <view class="section" wx:if="{{detail.comments && detail.comments.length > 0}}">
+      <view class="section-title">管理员留言</view>
+      <view class="comment-item" wx:for="{{detail.comments}}" wx:key="index">
+        <view class="comment-user">{{item.user}}</view>
+        <view class="comment-content">{{item.content}}</view>
+        <view class="comment-time">{{item.time}}</view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 新建/编辑模式 -->
+  <block wx:else>
+    <view class="form">
+      <view class="section">
+        <view class="section-title">进度信息</view>
+        
+        <view class="form-item">
+          <view class="label">标题 <text class="required">*</text></view>
+          <input class="input" placeholder="请输入进度标题" value="{{form.title}}" bindinput="onInput" data-field="title" />
+        </view>
+
+        <view class="form-item">
+          <view class="label">日期 <text class="required">*</text></view>
+          <picker mode="date" bindchange="onDateChange">
+            <view class="picker {{form.date ? '' : 'placeholder'}}">{{form.date || '请选择日期'}}</view>
+          </picker>
+        </view>
+
+        <view class="form-item">
+          <view class="label">进度内容 <text class="required">*</text></view>
+          <textarea class="textarea" placeholder="请详细描述本阶段活动进展" value="{{form.content}}" bindinput="onInput" data-field="content" />
+        </view>
+      </view>
+
+      <view class="section">
+        <view class="section-title">上传照片</view>
+        <view class="image-upload">
+          <view class="upload-item" wx:for="{{form.images}}" wx:key="*this">
+            <image class="upload-image" src="{{item}}" mode="aspectFill" />
+            <view class="upload-delete" catchtap="deleteImage" data-index="{{index}}">×</view>
+          </view>
+          <view class="upload-btn" bindtap="chooseImage" wx:if="{{form.images.length < 9}}">
+            <text class="upload-icon">+</text>
+            <text class="upload-text">添加照片</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <view class="btn-submit" bindtap="submitForm">提交进度</view>
+    </view>
+  </block>
 </view>

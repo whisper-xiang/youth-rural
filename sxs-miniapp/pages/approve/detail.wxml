@@ -1,4 +1,99 @@
-<view class="container">
-  <view class="title">项目审批详情</view>
-  <view class="desc">显示项目申报信息及学院管理员/高校管理员的审批意见。</view>
+<view class="page">
+  <!-- 状态头部 -->
+  <view class="status-header status-bg-{{detail.status}}">
+    <view class="status-text">{{detail.statusText}}</view>
+    <view class="status-time" wx:if="{{detail.approveTime}}">审批时间：{{detail.approveTime}}</view>
+  </view>
+
+  <!-- 项目信息 -->
+  <view class="section">
+    <view class="section-title">项目信息</view>
+    <view class="info-item">
+      <text class="label">项目名称</text>
+      <text class="value">{{detail.title}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">项目主题</text>
+      <text class="value">{{detail.theme}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">实践地点</text>
+      <text class="value">{{detail.location}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">实践时间</text>
+      <text class="value">{{detail.startDate}} 至 {{detail.endDate}}</text>
+    </view>
+  </view>
+
+  <!-- 团队信息 -->
+  <view class="section">
+    <view class="section-title">团队信息</view>
+    <view class="info-item">
+      <text class="label">团队名称</text>
+      <text class="value">{{detail.teamName}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">所属学院</text>
+      <text class="value">{{detail.college}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">负责人</text>
+      <text class="value">{{detail.leader}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">联系电话</text>
+      <text class="value">{{detail.phone}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">指导教师</text>
+      <text class="value">{{detail.teacher}}</text>
+    </view>
+    <view class="info-item">
+      <text class="label">团队成员</text>
+      <text class="value">{{detail.members}}</text>
+    </view>
+  </view>
+
+  <!-- 项目内容 -->
+  <view class="section">
+    <view class="section-title">项目内容</view>
+    <view class="info-block">
+      <text class="block-label">项目简介</text>
+      <text class="block-value">{{detail.description}}</text>
+    </view>
+    <view class="info-block">
+      <text class="block-label">实践计划</text>
+      <text class="block-value">{{detail.plan}}</text>
+    </view>
+    <view class="info-block">
+      <text class="block-label">预期成果</text>
+      <text class="block-value">{{detail.expectedResult}}</text>
+    </view>
+  </view>
+
+  <!-- 审批记录 -->
+  <view class="section" wx:if="{{detail.approveRecords && detail.approveRecords.length > 0}}">
+    <view class="section-title">审批记录</view>
+    <view class="record-item" wx:for="{{detail.approveRecords}}" wx:key="index">
+      <view class="record-header">
+        <text class="record-user">{{item.approver}}</text>
+        <text class="record-status record-{{item.action}}">{{item.actionText}}</text>
+      </view>
+      <view class="record-time">{{item.time}}</view>
+      <view class="record-remark" wx:if="{{item.remark}}">{{item.remark}}</view>
+    </view>
+  </view>
+
+  <!-- 审批操作（待审核状态显示） -->
+  <view class="approve-section" wx:if="{{detail.status === 'pending'}}">
+    <view class="section-title">审批意见</view>
+    <textarea class="remark-input" placeholder="请输入审批意见（选填）" bindinput="onRemarkInput" value="{{remark}}" />
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="footer" wx:if="{{detail.status === 'pending'}}">
+    <view class="btn-reject" bindtap="doReject">驳回</view>
+    <view class="btn-approve" bindtap="doApprove">通过</view>
+  </view>
 </view>

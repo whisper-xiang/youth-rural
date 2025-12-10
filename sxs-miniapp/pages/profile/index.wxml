@@ -1,4 +1,71 @@
-<view class="container">
-  <view class="title">个人中心</view>
-  <view class="desc">展示当前登录用户的基本信息和角色，并提供退出登录等操作入口。</view>
+<view class="page">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="avatar">
+      <text class="avatar-text">{{userInfo.avatarText}}</text>
+    </view>
+    <view class="user-info">
+      <view class="user-name">{{userInfo.name}}</view>
+      <view class="user-role">{{userInfo.roleName}}</view>
+    </view>
+    <view class="login-btn" wx:if="{{!isLogin}}" bindtap="goLogin">登录</view>
+  </view>
+
+  <!-- 我的数据 -->
+  <view class="stats-card" wx:if="{{isLogin}}">
+    <view class="stat-item" bindtap="goToPage" data-url="/pages/activity/apply-list">
+      <view class="stat-num">{{stats.applyCount}}</view>
+      <view class="stat-label">我的申报</view>
+    </view>
+    <view class="stat-item" bindtap="goToPage" data-url="/pages/progress/list">
+      <view class="stat-num">{{stats.progressCount}}</view>
+      <view class="stat-label">进度记录</view>
+    </view>
+    <view class="stat-item" bindtap="goToPage" data-url="/pages/result/list">
+      <view class="stat-num">{{stats.resultCount}}</view>
+      <view class="stat-label">成果数量</view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="goToPage" data-url="/pages/activity/apply-list">
+      <view class="menu-icon icon-apply"></view>
+      <view class="menu-text">我的申报</view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="goToPage" data-url="/pages/progress/list">
+      <view class="menu-icon icon-progress"></view>
+      <view class="menu-text">进度记录</view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="goToPage" data-url="/pages/result/list">
+      <view class="menu-icon icon-result"></view>
+      <view class="menu-text">我的成果</view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="goToPage" data-url="/pages/notice/list">
+      <view class="menu-icon icon-notice"></view>
+      <view class="menu-text">消息通知</view>
+      <view class="menu-arrow">›</view>
+      <view class="menu-badge" wx:if="{{unreadCount > 0}}">{{unreadCount}}</view>
+    </view>
+  </view>
+
+  <!-- 设置菜单 -->
+  <view class="menu-section">
+    <view class="menu-item" bindtap="showAbout">
+      <view class="menu-icon icon-about"></view>
+      <view class="menu-text">关于系统</view>
+      <view class="menu-arrow">›</view>
+    </view>
+    <view class="menu-item" bindtap="contactService">
+      <view class="menu-icon icon-service"></view>
+      <view class="menu-text">联系客服</view>
+      <view class="menu-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-btn" wx:if="{{isLogin}}" bindtap="logout">退出登录</view>
 </view>

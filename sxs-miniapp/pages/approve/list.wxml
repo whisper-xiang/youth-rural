@@ -1,4 +1,47 @@
-<view class="container">
-  <view class="title">项目审批列表</view>
-  <view class="desc">学院管理员、高校管理员查看待审与已审“三下乡”项目。</view>
+<view class="page">
+  <!-- 顶部筛选栏 -->
+  <view class="tabs">
+    <view class="tab {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
+    <view class="tab {{currentTab === 'pending' ? 'active' : ''}}" bindtap="switchTab" data-tab="pending">待审核</view>
+    <view class="tab {{currentTab === 'approved' ? 'active' : ''}}" bindtap="switchTab" data-tab="approved">已通过</view>
+    <view class="tab {{currentTab === 'rejected' ? 'active' : ''}}" bindtap="switchTab" data-tab="rejected">已驳回</view>
+  </view>
+
+  <!-- 审批列表 -->
+  <view class="list" wx:if="{{filteredList.length > 0}}">
+    <view class="card" wx:for="{{filteredList}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="card-header">
+        <view class="card-title">{{item.title}}</view>
+        <view class="card-status status-{{item.status}}">{{item.statusText}}</view>
+      </view>
+      <view class="card-body">
+        <view class="info-row">
+          <text class="info-label">申报团队：</text>
+          <text class="info-value">{{item.teamName}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">负责人：</text>
+          <text class="info-value">{{item.leader}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">所属学院：</text>
+          <text class="info-value">{{item.college}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">申报时间：</text>
+          <text class="info-value">{{item.applyTime}}</text>
+        </view>
+      </view>
+      <view class="card-footer" wx:if="{{item.status === 'pending'}}">
+        <view class="btn-quick btn-reject" catchtap="quickReject" data-id="{{item.id}}">驳回</view>
+        <view class="btn-quick btn-approve" catchtap="quickApprove" data-id="{{item.id}}">通过</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:else>
+    <view class="empty-icon">📋</view>
+    <view class="empty-text">暂无{{tabName}}项目</view>
+  </view>
 </view>

@@ -1,4 +1,34 @@
-<view class="container">
-  <view class="title">活动申报列表</view>
-  <view class="desc">团队负责人查看与管理本团队的申报项目。</view>
+<view class="page">
+  <!-- 顶部操作栏 -->
+  <view class="header">
+    <view class="header-title">我的申报</view>
+    <view class="btn-add" bindtap="createNew">+ 新建申报</view>
+  </view>
+
+  <!-- 申报列表 -->
+  <view class="list" wx:if="{{list.length > 0}}">
+    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="card-header">
+        <view class="card-title">{{item.title}}</view>
+        <view class="card-status status-{{item.status}}">{{item.statusText}}</view>
+      </view>
+      <view class="card-info">
+        <text class="info-item">负责人：{{item.leader}}</text>
+        <text class="info-item">成员：{{item.memberCount}}人</text>
+      </view>
+      <view class="card-info">
+        <text class="info-item">实践地点：{{item.location}}</text>
+      </view>
+      <view class="card-footer">
+        <text class="card-time">{{item.createTime}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:else>
+    <view class="empty-icon">📋</view>
+    <view class="empty-text">暂无申报项目</view>
+    <view class="empty-hint">点击右上角"新建申报"开始</view>
+  </view>
 </view>

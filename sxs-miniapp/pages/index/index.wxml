@@ -1,50 +1,43 @@
-<view class="container">
-  <!-- 用户信息区 -->
-  <view class="user-info">
-    <view class="avatar"></view>
-    <view class="info">
-      <view class="role">{{currentRole}}</view>
-      <view class="name">{{userName || '未登录'}}</view>
-    </view>
+<view class="page">
+  <!-- 顶部 Banner -->
+  <view class="banner">
+    <view class="banner-title">大学生暑期"三下乡"</view>
+    <view class="banner-subtitle">活动管理系统</view>
   </view>
 
-  <!-- 功能入口区 -->
-  <view class="grid">
-    <view class="grid-item" bindtap="goToApply">
-      <view class="icon icon-apply"></view>
-      <view class="label">活动申报</view>
-    </view>
-    <view class="grid-item" bindtap="goToApprove">
-      <view class="icon icon-approve"></view>
-      <view class="label">审批管理</view>
-    </view>
-    <view class="grid-item" bindtap="goToProgress">
-      <view class="icon icon-progress"></view>
-      <view class="label">进度跟踪</view>
-    </view>
-    <view class="grid-item" bindtap="goToResult">
-      <view class="icon icon-result"></view>
-      <view class="label">成果管理</view>
-    </view>
-    <view class="grid-item" bindtap="goToEvaluate">
-      <view class="icon icon-evaluate"></view>
-      <view class="label">评优管理</view>
-    </view>
-    <view class="grid-item" bindtap="goToNotice">
-      <view class="icon icon-notice"></view>
-      <view class="label">通知公告</view>
-    </view>
-  </view>
 
-  <!-- 快捷入口 -->
-  <view class="quick-links">
-    <view class="link-item" bindtap="goToProfile">
-      <view class="link-label">个人中心</view>
-      <view class="arrow">></view>
+
+  <!-- 功能模块入口 -->
+  <view class="module-grid">
+    <view class="module-card" bindtap="goToPage" data-url="/pages/activity/apply-list">
+      <view class="module-icon icon-apply"></view>
+      <view class="module-name">活动申报</view>
+      <view class="module-desc">创建和管理申报项目</view>
     </view>
-    <view class="link-item" bindtap="goToLogin">
-      <view class="link-label">切换角色</view>
-      <view class="arrow">></view>
+    <view class="module-card" bindtap="goToPage" data-url="/pages/approve/list">
+      <view class="module-icon icon-approve"></view>
+      <view class="module-name">审批管理</view>
+      <view class="module-desc">审核项目申报材料</view>
+    </view>
+    <view class="module-card" bindtap="goToPage" data-url="/pages/progress/list">
+      <view class="module-icon icon-progress"></view>
+      <view class="module-name">进度跟踪</view>
+      <view class="module-desc">上传和查看活动进展</view>
+    </view>
+    <view class="module-card" bindtap="goToPage" data-url="/pages/result/list">
+      <view class="module-icon icon-result"></view>
+      <view class="module-name">成果管理</view>
+      <view class="module-desc">提交和浏览活动成果</view>
+    </view>
+    <view class="module-card" bindtap="goToPage" data-url="/pages/evaluate/list">
+      <view class="module-icon icon-evaluate"></view>
+      <view class="module-name">评优管理</view>
+      <view class="module-desc">项目评审与打分</view>
+    </view>
+    <view class="module-card" bindtap="goToPage" data-url="/pages/notice/list">
+      <view class="module-icon icon-notice"></view>
+      <view class="module-name">通知公告</view>
+      <view class="module-desc">查看最新通知</view>
     </view>
   </view>
 </view>

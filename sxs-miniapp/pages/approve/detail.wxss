@@ -1,3 +1,185 @@
-.container { padding: 32rpx; }
-.title { font-size: 32rpx; font-weight: 600; margin-bottom: 16rpx; }
-.desc { font-size: 28rpx; color: #666; }
+.page {
+  min-height: 100vh;
+  background: #f7f8fa;
+  padding-bottom: 160rpx;
+}
+
+/* 状态头部 */
+.status-header {
+  padding: 32rpx;
+  color: #fff;
+}
+.status-bg-pending {
+  background: #fa8c16;
+}
+.status-bg-approved {
+  background: #52c41a;
+}
+.status-bg-rejected {
+  background: #ff4d4f;
+}
+.status-text {
+  font-size: 36rpx;
+  font-weight: 600;
+  margin-bottom: 8rpx;
+}
+.status-time {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+/* 区块 */
+.section {
+  background: #fff;
+  margin: 24rpx;
+  border-radius: 12rpx;
+  padding: 24rpx;
+}
+.section:first-of-type {
+  margin-top: 0;
+}
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 20rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* 信息项 */
+.info-item {
+  display: flex;
+  margin-bottom: 16rpx;
+}
+.info-item:last-child {
+  margin-bottom: 0;
+}
+.label {
+  font-size: 26rpx;
+  color: #8c8c8c;
+  width: 140rpx;
+  flex-shrink: 0;
+}
+.value {
+  font-size: 26rpx;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+/* 信息块 */
+.info-block {
+  margin-bottom: 20rpx;
+}
+.info-block:last-child {
+  margin-bottom: 0;
+}
+.block-label {
+  font-size: 26rpx;
+  color: #8c8c8c;
+  display: block;
+  margin-bottom: 8rpx;
+}
+.block-value {
+  font-size: 26rpx;
+  color: #1a1a1a;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+/* 审批记录 */
+.record-item {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.record-item:last-child {
+  border-bottom: none;
+}
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+.record-user {
+  font-size: 26rpx;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+.record-status {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+}
+.record-approved {
+  background: #f6ffed;
+  color: #52c41a;
+}
+.record-rejected {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+.record-time {
+  font-size: 22rpx;
+  color: #bfbfbf;
+  margin-bottom: 8rpx;
+}
+.record-remark {
+  font-size: 24rpx;
+  color: #666;
+  background: #f7f8fa;
+  padding: 12rpx;
+  border-radius: 8rpx;
+}
+
+/* 审批意见输入 */
+.approve-section {
+  background: #fff;
+  margin: 24rpx;
+  border-radius: 12rpx;
+  padding: 24rpx;
+}
+.remark-input {
+  width: 100%;
+  height: 160rpx;
+  background: #f7f8fa;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #1a1a1a;
+  box-sizing: border-box;
+}
+
+/* 底部按钮 */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+.btn-reject {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: #ff4d4f;
+  background: #fff;
+  border: 2rpx solid #ff4d4f;
+  border-radius: 12rpx;
+  margin-right: 24rpx;
+}
+.btn-approve {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: #fff;
+  background: #2b5aed;
+  border-radius: 12rpx;
+}

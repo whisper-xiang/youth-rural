@@ -1,4 +1,98 @@
-<view class="container">
-  <view class="title">活动申报详情</view>
-  <view class="desc">团队负责人填写和查看“三下乡”活动申报表及支撑材料。</view>
+<view class="page">
+  <!-- 表单区域 -->
+  <view class="form">
+    <!-- 项目基本信息 -->
+    <view class="section">
+      <view class="section-title">项目基本信息</view>
+      
+      <view class="form-item">
+        <view class="label">项目名称 <text class="required">*</text></view>
+        <input class="input" placeholder="请输入项目名称" value="{{form.title}}" bindinput="onInput" data-field="title" disabled="{{isView}}" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">项目主题 <text class="required">*</text></view>
+        <picker mode="selector" range="{{themeOptions}}" bindchange="onThemeChange" disabled="{{isView}}">
+          <view class="picker {{form.theme ? '' : 'placeholder'}}">
+            {{form.theme || '请选择项目主题'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <view class="label">实践地点 <text class="required">*</text></view>
+        <input class="input" placeholder="请输入实践地点" value="{{form.location}}" bindinput="onInput" data-field="location" disabled="{{isView}}" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">实践时间 <text class="required">*</text></view>
+        <view class="date-range">
+          <picker mode="date" bindchange="onStartDateChange" disabled="{{isView}}">
+            <view class="date-picker {{form.startDate ? '' : 'placeholder'}}">{{form.startDate || '开始日期'}}</view>
+          </picker>
+          <text class="date-sep">至</text>
+          <picker mode="date" bindchange="onEndDateChange" disabled="{{isView}}">
+            <view class="date-picker {{form.endDate ? '' : 'placeholder'}}">{{form.endDate || '结束日期'}}</view>
+          </picker>
+        </view>
+      </view>
+    </view>
+
+    <!-- 团队信息 -->
+    <view class="section">
+      <view class="section-title">团队信息</view>
+      
+      <view class="form-item">
+        <view class="label">团队负责人 <text class="required">*</text></view>
+        <input class="input" placeholder="请输入负责人姓名" value="{{form.leader}}" bindinput="onInput" data-field="leader" disabled="{{isView}}" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">联系电话 <text class="required">*</text></view>
+        <input class="input" type="number" placeholder="请输入联系电话" value="{{form.phone}}" bindinput="onInput" data-field="phone" disabled="{{isView}}" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">指导教师</view>
+        <input class="input" placeholder="请输入指导教师姓名" value="{{form.teacher}}" bindinput="onInput" data-field="teacher" disabled="{{isView}}" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">团队成员</view>
+        <textarea class="textarea" placeholder="请输入团队成员姓名，用逗号分隔" value="{{form.members}}" bindinput="onInput" data-field="members" disabled="{{isView}}" />
+      </view>
+    </view>
+
+    <!-- 项目内容 -->
+    <view class="section">
+      <view class="section-title">项目内容</view>
+      
+      <view class="form-item">
+        <view class="label">项目简介 <text class="required">*</text></view>
+        <textarea class="textarea" placeholder="请简要描述项目内容（200字以内）" value="{{form.description}}" bindinput="onInput" data-field="description" maxlength="200" disabled="{{isView}}" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">实践计划</view>
+        <textarea class="textarea tall" placeholder="请详细描述实践计划安排" value="{{form.plan}}" bindinput="onInput" data-field="plan" disabled="{{isView}}" />
+      </view>
+
+      <view class="form-item">
+        <view class="label">预期成果</view>
+        <textarea class="textarea" placeholder="请描述预期成果" value="{{form.expectedResult}}" bindinput="onInput" data-field="expectedResult" disabled="{{isView}}" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="footer" wx:if="{{!isView}}">
+    <view class="btn-save" bindtap="saveDraft">保存草稿</view>
+    <view class="btn-submit" bindtap="submitForm">提交申报</view>
+  </view>
+
+  <!-- 查看模式下的状态 -->
+  <view class="status-bar" wx:if="{{isView}}">
+    <view class="status-label">当前状态：</view>
+    <view class="status-value status-{{detail.status}}">{{detail.statusText}}</view>
+  </view>
 </view>

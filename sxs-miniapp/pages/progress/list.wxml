@@ -1,4 +1,37 @@
-<view class="container">
-  <view class="title">进度跟踪列表</view>
-  <view class="desc">团队按阶段上传活动进展，管理员可查看各团队进度。</view>
+<view class="page">
+  <!-- 顶部操作栏 -->
+  <view class="header">
+    <view class="header-title">活动进度</view>
+    <view class="btn-add" bindtap="addProgress">+ 上传进度</view>
+  </view>
+
+  <!-- 进度时间线 -->
+  <view class="timeline" wx:if="{{list.length > 0}}">
+    <view class="timeline-item" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="timeline-dot"></view>
+      <view class="timeline-line" wx:if="{{index < list.length - 1}}"></view>
+      <view class="timeline-content">
+        <view class="content-header">
+          <view class="content-title">{{item.title}}</view>
+          <view class="content-date">{{item.date}}</view>
+        </view>
+        <view class="content-summary">{{item.summary}}</view>
+        <view class="content-images" wx:if="{{item.images && item.images.length > 0}}">
+          <image class="thumb" wx:for="{{item.images}}" wx:for-item="img" wx:key="*this" src="{{img}}" mode="aspectFill" />
+          <view class="image-count" wx:if="{{item.imageCount > 3}}">+{{item.imageCount - 3}}</view>
+        </view>
+        <view class="content-footer">
+          <text class="footer-user">{{item.uploader}}</text>
+          <text class="footer-team">{{item.teamName}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:else>
+    <view class="empty-icon">📝</view>
+    <view class="empty-text">暂无进度记录</view>
+    <view class="empty-hint">点击右上角上传活动进度</view>
+  </view>
 </view>
