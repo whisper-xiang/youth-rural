@@ -14,23 +14,20 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
-      return error(res, '用户名和密码不能为空');
+      return error(res, '用户名和密码不能为空', 400);
     }
 
     // 查询用户
-    const [rows] = await db.query(
-      `SELECT u.*, c.name as college_name 
-       FROM sys_user u 
-       LEFT JOIN sys_college c ON u.college_id = c.id 
-       WHERE u.username = ? AND u.status = 1`,
+    const [users] = await db.query(
+      'SELECT * FROM sys_user WHERE username = ? AND status = 1',
       [username]
     );
 
-    if (rows.length === 0) {
-      return error(res, '用户名或密码错误');
+    if (users.length === 0) {
+      return error(res, '用户名或密码错误', 400);
     }
 
-    const user = rows[0];
+    const user = users[0];
 
     // 验证密码
     const isMatch = await bcrypt.compare(password, user.password);

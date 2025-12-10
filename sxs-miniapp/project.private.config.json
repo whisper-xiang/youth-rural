@@ -2,7 +2,7 @@
   "libVersion": "3.9.2",
   "projectname": "sxs-miniapp",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": false,
