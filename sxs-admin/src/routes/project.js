@@ -6,6 +6,7 @@ const router = express.Router();
 const db = require("../config/db");
 const { verifyToken, checkRole } = require("../middleware/auth");
 const { success, paginate, error } = require("../utils/response");
+const { safeCreateNotice } = require("../utils/noticeHelper");
 
 // 获取项目列表
 router.get("/list", verifyToken, async (req, res) => {
@@ -206,6 +207,16 @@ router.post(
         [evaluationId, id]
       );
 
+      await safeCreateNotice({
+        conn,
+        publisherId: teacherId,
+        type: "activity",
+        title: `项目结项：${project.title}`,
+        summary: `指导教师已结项，项目进入评优列表`,
+        content: `指导教师对项目「${project.title}」执行结项操作，项目状态变更为结项并进入评优。`,
+        source: "项目管理",
+      });
+
       await conn.commit();
       success(res, { evaluationId }, "结项成功，已进入评优列表");
     } catch (err) {
@@ -289,6 +300,16 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
     }
 
     await conn.commit();
+
+    await safeCreateNotice({
+      publisherId: userId,
+      type: "activity",
+      title: `创建项目：${title}`,
+      summary: "学生创建了新的项目草稿",
+      content: `学生创建项目「${title}」，当前状态为草稿，可继续完善并提交审批。`,
+      source: "项目管理",
+    });
+
     success(res, { id: projectId, projectNo }, "创建成功");
   } catch (err) {
     await conn.rollback();
@@ -348,6 +369,15 @@ router.put("/update/:id", verifyToken, async (req, res) => {
       ]
     );
 
+    await safeCreateNotice({
+      publisherId: req.user.id,
+      type: "activity",
+      title: `更新项目：${project.title}`,
+      summary: "项目信息已更新",
+      content: `用户更新了项目「${project.title}」的基本信息。`,
+      source: "项目管理",
+    });
+
     success(res, null, "更新成功");
   } catch (err) {
     console.error("Update project error:", err);
@@ -377,6 +407,16 @@ router.post("/submit/:id", verifyToken, async (req, res) => {
       "pending",
       id,
     ]);
+
+    await safeCreateNotice({
+      publisherId: req.user.id,
+      type: "activity",
+      title: `提交审批：${project.title}`,
+      summary: "项目已提交，进入审核流程",
+      content: `项目「${project.title}」已由学生提交审批，状态变更为待审核。`,
+      source: "项目管理",
+    });
+
     success(res, null, "提交成功");
   } catch (err) {
     console.error("Submit project error:", err);
@@ -405,6 +445,15 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
     await db.query("DELETE FROM project WHERE id = ?", [id]);
     await db.query("DELETE FROM project_member WHERE project_id = ?", [id]);
     await db.query("DELETE FROM project_attachment WHERE project_id = ?", [id]);
+
+    await safeCreateNotice({
+      publisherId: req.user.id,
+      type: "activity",
+      title: `删除项目：${project.title}`,
+      summary: "项目草稿已删除",
+      content: `用户删除了草稿项目「${project.title}」。`,
+      source: "项目管理",
+    });
 
     success(res, null, "删除成功");
   } catch (err) {

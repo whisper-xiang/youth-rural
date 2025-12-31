@@ -6,6 +6,7 @@ const router = express.Router();
 const db = require("../config/db");
 const { verifyToken } = require("../middleware/auth");
 const { success, paginate, error } = require("../utils/response");
+const { safeCreateNotice } = require("../utils/noticeHelper");
 
 // 获取进度列表
 router.get("/list", verifyToken, async (req, res) => {
@@ -164,6 +165,16 @@ router.post("/create", verifyToken, async (req, res) => {
       }
     }
 
+    await safeCreateNotice({
+      conn,
+      publisherId: userId,
+      type: "activity",
+      title: `上传进度：${project.title}`,
+      summary: "项目新增进度记录",
+      content: `项目「${project.title}」新增进度：${title}`,
+      source: "进度跟踪",
+    });
+
     await conn.commit();
     success(res, { id: progressId }, "创建成功");
   } catch (err) {
@@ -194,10 +205,26 @@ router.post("/comment/:id", verifyToken, async (req, res) => {
       return error(res, "进度记录不存在");
     }
 
+    const [[project]] = await db.query(
+      "SELECT id, title FROM project WHERE id = ?",
+      [progress.project_id]
+    );
+
     await db.query(
       "INSERT INTO progress_comment (progress_id, user_id, content) VALUES (?, ?, ?)",
       [id, userId, content]
     );
+
+    await safeCreateNotice({
+      publisherId: userId,
+      type: "activity",
+      title: `进度评论：${project ? project.title : progress.project_id}`,
+      summary: "项目进度收到新评论",
+      content: `项目「${
+        project ? project.title : progress.project_id
+      }」的进度有新评论：${content}`,
+      source: "进度跟踪",
+    });
 
     success(res, null, "评论成功");
   } catch (err) {
@@ -225,6 +252,21 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
     await db.query("DELETE FROM progress WHERE id = ?", [id]);
     await db.query("DELETE FROM progress_image WHERE progress_id = ?", [id]);
     await db.query("DELETE FROM progress_comment WHERE progress_id = ?", [id]);
+
+    const [[project]] = await db.query(
+      "SELECT id, title FROM project WHERE id = ?",
+      [progress.project_id]
+    );
+    await safeCreateNotice({
+      publisherId: userId,
+      type: "activity",
+      title: `删除进度：${project ? project.title : progress.project_id}`,
+      summary: "项目进度记录被删除",
+      content: `项目「${
+        project ? project.title : progress.project_id
+      }」的一条进度记录已被删除。`,
+      source: "进度跟踪",
+    });
 
     success(res, null, "删除成功");
   } catch (err) {

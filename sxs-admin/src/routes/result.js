@@ -6,6 +6,7 @@ const router = express.Router();
 const db = require("../config/db");
 const { verifyToken } = require("../middleware/auth");
 const { success, paginate, error } = require("../utils/response");
+const { safeCreateNotice } = require("../utils/noticeHelper");
 
 // 获取成果列表
 router.get("/list", verifyToken, async (req, res) => {
@@ -210,6 +211,22 @@ router.post("/create", verifyToken, async (req, res) => {
       }
     }
 
+    const [[projectInfo]] = await conn.query(
+      "SELECT id, title FROM project WHERE id = ?",
+      [projectId]
+    );
+    await safeCreateNotice({
+      conn,
+      publisherId: userId,
+      type: "activity",
+      title: `提交成果：${projectInfo ? projectInfo.title : projectId}`,
+      summary: "项目新增成果（草稿）",
+      content: `项目「${
+        projectInfo ? projectInfo.title : projectId
+      }」新增成果：${title}（草稿）`,
+      source: "成果管理",
+    });
+
     await conn.commit();
     success(res, { id: resultId }, "创建成功");
   } catch (err) {
@@ -238,6 +255,22 @@ router.post("/publish/:id", verifyToken, async (req, res) => {
     }
 
     await db.query("UPDATE result SET status = 'published' WHERE id = ?", [id]);
+
+    const [[projectInfo]] = await db.query(
+      "SELECT id, title FROM project WHERE id = ?",
+      [result.project_id]
+    );
+    await safeCreateNotice({
+      publisherId: userId,
+      type: "activity",
+      title: `成果发布：${projectInfo ? projectInfo.title : result.project_id}`,
+      summary: "项目成果已发布",
+      content: `项目「${
+        projectInfo ? projectInfo.title : result.project_id
+      }」成果「${result.title}」已发布。`,
+      source: "成果管理",
+    });
+
     success(res, null, "发布成功");
   } catch (err) {
     console.error("Publish result error:", err);
@@ -264,6 +297,21 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
     await db.query("DELETE FROM result WHERE id = ?", [id]);
     await db.query("DELETE FROM result_image WHERE result_id = ?", [id]);
     await db.query("DELETE FROM result_attachment WHERE result_id = ?", [id]);
+
+    const [[projectInfo]] = await db.query(
+      "SELECT id, title FROM project WHERE id = ?",
+      [result.project_id]
+    );
+    await safeCreateNotice({
+      publisherId: userId,
+      type: "activity",
+      title: `删除成果：${projectInfo ? projectInfo.title : result.project_id}`,
+      summary: "项目成果已删除",
+      content: `项目「${
+        projectInfo ? projectInfo.title : result.project_id
+      }」成果「${result.title}」已被删除。`,
+      source: "成果管理",
+    });
 
     success(res, null, "删除成功");
   } catch (err) {
