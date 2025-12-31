@@ -25,7 +25,7 @@ router.get(
 
       // 根据角色确定审批范围
       if (role === "college_admin") {
-        // 学院管理员：审批本学院待审批的项目
+        // 学院管理员：只能审批本学院待学院审核的项目
         const [[user]] = await db.query(
           "SELECT college_id FROM sys_user WHERE id = ?",
           [userId]
@@ -36,14 +36,12 @@ router.get(
         if (status === "pending") {
           whereClauses.push("p.status = 'pending'");
         } else if (status === "approved") {
-          whereClauses.push(
-            "p.status IN ('college_approved', 'school_approved')"
-          );
+          whereClauses.push("p.status = 'college_approved'");
         } else if (status === "rejected") {
           whereClauses.push("p.status = 'rejected'");
         }
       } else if (role === "school_admin") {
-        // 校级管理员：审批学院已通过的项目
+        // 校级管理员：只能审批待校级审核的项目
         if (status === "pending") {
           whereClauses.push("p.status = 'college_approved'");
         } else if (status === "approved") {
@@ -203,6 +201,17 @@ router.post(
       );
       if (!project) {
         return error(res, "项目不存在");
+      }
+
+      // 检查项目状态和权限
+      if (role === "college_admin") {
+        if (project.status !== "pending") {
+          return error(res, "只能驳回待学院审核的项目");
+        }
+      } else if (role === "school_admin") {
+        if (project.status !== "college_approved") {
+          return error(res, "只能驳回待校级审核的项目");
+        }
       }
 
       const approvalLevel = role === "college_admin" ? "college" : "school";

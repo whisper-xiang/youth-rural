@@ -70,6 +70,14 @@
   background: #fff7e6;
   color: #fa8c16;
 }
+.status-college_approved {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+.status-school_approved {
+  background: #f6ffed;
+  color: #52c41a;
+}
 .status-approved {
   background: #f6ffed;
   color: #52c41a;
@@ -77,6 +85,10 @@
 .status-rejected {
   background: #fff2f0;
   color: #ff4d4f;
+}
+.status-closed {
+  background: #f0f0f0;
+  color: #8c8c8c;
 }
 
 /* 卡片内容 */

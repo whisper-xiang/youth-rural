@@ -3,7 +3,8 @@
   <view class="tabs">
     <view class="tab {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
     <view class="tab {{currentTab === 'pending' ? 'active' : ''}}" bindtap="switchTab" data-tab="pending">待审核</view>
-    <view class="tab {{currentTab === 'approved' ? 'active' : ''}}" bindtap="switchTab" data-tab="approved">已通过</view>
+    <view class="tab {{currentTab === 'college_approved' ? 'active' : ''}}" bindtap="switchTab" data-tab="college_approved">学院已审</view>
+    <view class="tab {{currentTab === 'school_approved' ? 'active' : ''}}" bindtap="switchTab" data-tab="school_approved">校级已审</view>
     <view class="tab {{currentTab === 'rejected' ? 'active' : ''}}" bindtap="switchTab" data-tab="rejected">已驳回</view>
   </view>
 
@@ -32,7 +33,11 @@
           <text class="info-value">{{item.applyTime}}</text>
         </view>
       </view>
-      <view class="card-footer" wx:if="{{item.status === 'pending'}}">
+      <view class="card-footer" wx:if="{{item.status === 'pending' && userRole === 'college_admin'}}">
+        <view class="btn-quick btn-reject" catchtap="quickReject" data-id="{{item.id}}">驳回</view>
+        <view class="btn-quick btn-approve" catchtap="quickApprove" data-id="{{item.id}}">通过</view>
+      </view>
+      <view class="card-footer" wx:if="{{item.status === 'college_approved' && userRole === 'school_admin'}}">
         <view class="btn-quick btn-reject" catchtap="quickReject" data-id="{{item.id}}">驳回</view>
         <view class="btn-quick btn-approve" catchtap="quickApprove" data-id="{{item.id}}">通过</view>
       </view>

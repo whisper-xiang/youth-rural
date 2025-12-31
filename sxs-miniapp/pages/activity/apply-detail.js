@@ -69,14 +69,21 @@ Page({
       canCloseProject,
     });
 
-    if (mode === "view" && id) {
+    // view / edit 模式：需要回显项目详情；同时加载教师列表以便展示/选择
+    if (id && mode !== "create") {
+      this.loadTeachers();
       this.loadDetail(id);
     } else {
       this.loadTeachers();
     }
 
     wx.setNavigationBarTitle({
-      title: mode === "create" ? "新建申报" : "申报详情",
+      title:
+        mode === "create"
+          ? "新建申报"
+          : mode === "edit"
+          ? "编辑申报"
+          : "申报详情",
     });
   },
 
@@ -96,10 +103,11 @@ Page({
       const res = await projectApi.getDetail(id);
       const statusMap = {
         draft: "草稿",
-        pending: "待审核",
-        college_approved: "学院已审",
-        approved: "已通过",
-        closed: "结项",
+        pending: "待学院审核",
+        college_approved: "待校级审核",
+        school_approved: "审核通过",
+        approved: "审核通过",
+        closed: "已结项",
         rejected: "已驳回",
       };
       const detail = {
@@ -318,7 +326,7 @@ Page({
     }
 
     const status = this.data.detail && this.data.detail.status;
-    if (status !== "approved") {
+    if (status !== "approved" && status !== "school_approved") {
       wx.showToast({ title: "项目未通过审核，不能提交成果", icon: "none" });
       return;
     }
@@ -356,7 +364,7 @@ Page({
     }
 
     const status = this.data.detail && this.data.detail.status;
-    if (status !== "approved") {
+    if (status !== "approved" && status !== "school_approved") {
       wx.showToast({ title: "项目未通过审核，不能上传进度", icon: "none" });
       return;
     }
@@ -376,7 +384,10 @@ Page({
       wx.showToast({ title: "当前角色不可结项", icon: "none" });
       return;
     }
-    if (!detail || detail.status !== "approved") {
+    if (
+      !detail ||
+      (detail.status !== "approved" && detail.status !== "school_approved")
+    ) {
       wx.showToast({ title: "仅已通过项目可结项", icon: "none" });
       return;
     }

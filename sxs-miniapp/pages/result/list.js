@@ -77,10 +77,11 @@ Page({
   getStatusText(status) {
     const statusMap = {
       draft: "草稿",
-      pending: "待审核",
-      college_approved: "学院已审",
-      approved: "已通过",
-      closed: "结项",
+      pending: "待学院审核",
+      college_approved: "待校级审核",
+      school_approved: "审核通过",
+      approved: "审核通过",
+      closed: "已结项",
       rejected: "已驳回",
     };
     return statusMap[status] || status;

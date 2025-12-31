@@ -10,13 +10,24 @@ Page({
     pageSize: 10,
     hasMore: true,
     loading: false,
+    userRole: "",
   },
 
   onLoad() {
+    const app = getApp();
+    const userInfo = app.getUserInfo();
+    if (userInfo) {
+      this.setData({ userRole: userInfo.role });
+    }
     this.loadList(true);
   },
 
   onShow() {
+    const app = getApp();
+    const userInfo = app.getUserInfo();
+    if (userInfo) {
+      this.setData({ userRole: userInfo.role });
+    }
     this.loadList(true);
   },
 
@@ -46,10 +57,13 @@ Page({
       });
 
       const statusMap = {
-        pending: "待审核",
-        college_approved: "已通过",
-        school_approved: "已通过",
+        draft: "草稿",
+        pending: "待学院审核",
+        college_approved: "待校级审核",
+        school_approved: "审核通过",
+        approved: "审核通过",
         rejected: "已驳回",
+        closed: "已结项",
       };
 
       const newList = res.list.map((item) => ({

@@ -3,19 +3,10 @@ const { progressApi, projectApi } = require("../../utils/api");
 Page({
   data: {
     projects: [],
-    canUpload: false,
     loading: false,
   },
 
   onLoad() {
-    const app = getApp();
-    const canUpload = !!(
-      app &&
-      app.hasPermission &&
-      app.hasPermission("progress.upload")
-    );
-    this.setData({ canUpload });
-
     // 检查登录状态
     const token = wx.getStorageSync("token");
     if (!token) {
@@ -35,14 +26,6 @@ Page({
   },
 
   onShow() {
-    const app = getApp();
-    const canUpload = !!(
-      app &&
-      app.hasPermission &&
-      app.hasPermission("progress.upload")
-    );
-    this.setData({ canUpload });
-
     this.loadProjects();
   },
 
@@ -98,10 +81,11 @@ Page({
   getStatusText(status) {
     const statusMap = {
       draft: "草稿",
-      pending: "待审核",
-      college_approved: "学院已审",
-      approved: "已通过",
-      closed: "结项",
+      pending: "待学院审核",
+      college_approved: "待校级审核",
+      school_approved: "审核通过",
+      approved: "审核通过",
+      closed: "已结项",
       rejected: "已驳回",
     };
     return statusMap[status] || status;
@@ -116,33 +100,6 @@ Page({
       url: `/pages/progress/project?projectId=${projectId}&title=${encodeURIComponent(
         title || ""
       )}`,
-    });
-  },
-
-  // 上传进度（通用）
-  addProgress() {
-    if (!this.data.canUpload) {
-      wx.showToast({ title: "当前角色不可上传进度", icon: "none" });
-      return;
-    }
-
-    const approvedProjects = this.data.projects.filter(
-      (p) => p && p.status === "approved"
-    );
-
-    if (approvedProjects.length === 0) {
-      wx.showToast({ title: "暂无已通过项目，不能上传进度", icon: "none" });
-      return;
-    }
-
-    wx.showActionSheet({
-      itemList: approvedProjects.map((p) => p.title),
-      success: (res) => {
-        const project = approvedProjects[res.tapIndex];
-        wx.navigateTo({
-          url: `/pages/progress/detail?mode=create&projectId=${project.id}`,
-        });
-      },
     });
   },
 });
