@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="header">
+    <view class="header-title">{{title || '项目成果'}}</view>
+    <view class="btn-add" bindtap="addResult">+ 提交成果</view>
+  </view>
+
+  <view class="list" wx:if="{{list.length > 0}}">
+    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="card-title">{{item.title}}</view>
+      <view class="card-meta">
+        <text class="meta-category">{{item.category}}</text>
+        <text class="meta-date">{{item.submitDate}}</text>
+      </view>
+      <view class="card-desc">{{item.summary}}</view>
+    </view>
+  </view>
+
+  <view class="empty" wx:else>
+    <view class="empty-icon">📁</view>
+    <view class="empty-text">该项目暂无成果</view>
+    <view class="empty-hint">可点击右上角提交成果</view>
+  </view>
+</view>

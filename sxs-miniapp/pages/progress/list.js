@@ -1,80 +1,125 @@
-const { progressApi } = require('../../utils/api');
-const { BASE_URL } = require('../../utils/request');
+const { progressApi, projectApi } = require("../../utils/api");
 
 Page({
   data: {
-    list: [],
-    page: 1,
-    pageSize: 10,
-    hasMore: true,
-    loading: false
+    projects: [],
+    loading: false,
   },
 
   onLoad() {
-    this.loadList(true);
+    // 检查登录状态
+    const token = wx.getStorageSync("token");
+    if (!token) {
+      wx.showToast({
+        title: "请先登录",
+        icon: "none",
+      });
+      setTimeout(() => {
+        wx.navigateTo({
+          url: "/pages/auth/login",
+        });
+      }, 1500);
+      return;
+    }
+
+    this.loadProjects();
   },
 
   onShow() {
-    this.loadList(true);
+    this.loadProjects();
   },
 
   onPullDownRefresh() {
-    this.loadList(true);
+    this.loadProjects();
   },
 
-  onReachBottom() {
-    if (this.data.hasMore && !this.data.loading) {
-      this.loadList(false);
-    }
-  },
-
-  // 加载进度列表
-  async loadList(refresh = false) {
+  // 加载项目列表
+  async loadProjects() {
     if (this.data.loading) return;
 
-    const currentPage = refresh ? 1 : this.data.page;
     this.setData({ loading: true });
 
     try {
-      const res = await progressApi.getList({
-        page: currentPage,
-        pageSize: this.data.pageSize
+      console.log("开始加载项目列表...");
+      const res = await projectApi.getList({
+        page: 1,
+        pageSize: 100,
       });
 
-      const baseUrl = BASE_URL.replace('/api', '');
-      const newList = res.list.map(item => ({
-        ...item,
-        date: item.progress_date ? item.progress_date.slice(0, 10) : '',
-        summary: item.content ? item.content.slice(0, 100) : '',
-        images: (item.images || []).map(img => img.startsWith('http') ? img : baseUrl + img),
-        imageCount: (item.images || []).length
+      console.log("项目列表响应:", res);
+
+      if (!res || !res.list) {
+        console.error("项目列表响应格式错误:", res);
+        this.setData({ projects: [] });
+        return;
+      }
+
+      const projects = res.list.map((project) => ({
+        ...project,
+        progress_count: Number(project.progress_count) || 0,
+        start_date: project.start_date ? project.start_date.slice(0, 10) : "",
+        end_date: project.end_date ? project.end_date.slice(0, 10) : "",
+        statusText: this.getStatusText(project.status),
       }));
 
-      this.setData({
-        list: refresh ? newList : [...this.data.list, ...newList],
-        page: currentPage + 1,
-        hasMore: newList.length === this.data.pageSize
-      });
+      console.log("处理后的项目列表:", projects);
+
+      this.setData({ projects });
     } catch (err) {
-      console.error('加载进度列表失败:', err);
+      console.error("加载项目列表失败:", err);
+      wx.showToast({
+        title: "加载失败",
+        icon: "none",
+      });
     } finally {
       this.setData({ loading: false });
       wx.stopPullDownRefresh();
     }
   },
 
-  // 上传进度
-  addProgress() {
+  // 获取状态文本
+  getStatusText(status) {
+    const statusMap = {
+      draft: "草稿",
+      pending: "待审核",
+      college_approved: "学院已审",
+      approved: "已通过",
+      rejected: "已驳回",
+    };
+    return statusMap[status] || status;
+  },
+
+  // 进入某个项目的进度列表页
+  goProject(e) {
+    const projectId = e.currentTarget.dataset.id;
+    const title = e.currentTarget.dataset.title;
+    if (!projectId) return;
     wx.navigateTo({
-      url: '/pages/progress/detail?mode=create'
+      url: `/pages/progress/project?projectId=${projectId}&title=${encodeURIComponent(
+        title || ""
+      )}`,
     });
   },
 
-  // 查看详情
-  goDetail(e) {
-    const id = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/progress/detail?id=${id}&mode=view`
+  // 上传进度（通用）
+  addProgress() {
+    const approvedProjects = this.data.projects.filter(
+      (p) => p && p.status === "approved"
+    );
+
+    if (approvedProjects.length === 0) {
+      wx.showToast({ title: "暂无已通过项目，不能上传进度", icon: "none" });
+      return;
+    }
+
+    wx.showActionSheet({
+      itemList: approvedProjects.map((p) => p.title),
+      success: (res) => {
+        const project = approvedProjects[res.tapIndex];
+        wx.navigateTo({
+          url: `/pages/progress/detail?mode=create&projectId=${project.id}`,
+        });
+      },
     });
-  }
+  },
 });

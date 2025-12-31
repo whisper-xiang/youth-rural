@@ -12,7 +12,7 @@
 
       <view class="form-item">
         <view class="label">项目主题 <text class="required">*</text></view>
-        <picker mode="selector" range="{{themeOptions}}" bindchange="onThemeChange" disabled="{{isView}}">
+        <picker mode="selector" range="{{themeOptions}}" value="{{form.themeIndex || 0}}" bindchange="onThemeChange" disabled="{{isView}}">
           <view class="picker {{form.theme ? '' : 'placeholder'}}">
             {{form.theme || '请选择项目主题'}}
           </view>
@@ -35,6 +35,11 @@
             <view class="date-picker {{form.endDate ? '' : 'placeholder'}}">{{form.endDate || '结束日期'}}</view>
           </picker>
         </view>
+      </view>
+
+      <view class="form-item">
+        <view class="label">预算金额（元）</view>
+        <input class="input" type="digit" placeholder="请输入项目预算金额" value="{{form.budget}}" bindinput="onInput" data-field="budget" disabled="{{isView}}" />
       </view>
     </view>
 
@@ -59,7 +64,21 @@
 
       <view class="form-item">
         <view class="label">团队成员</view>
-        <textarea class="textarea" placeholder="请输入团队成员姓名，用逗号分隔" value="{{form.members}}" bindinput="onInput" data-field="members" disabled="{{isView}}" />
+        <block wx:if="{{isView}}">
+          <block wx:if="{{detail.members && detail.members.length > 0}}">
+            <view class="members-list">
+              <view class="member-item" wx:for="{{detail.members}}" wx:key="user_id">
+                <view class="member-name">{{item.name}}</view>
+                <view class="member-role">{{item.role === 'leader' ? '负责人' : '成员'}}</view>
+                <view class="member-resp" wx:if="{{item.responsibility}}">职责：{{item.responsibility}}</view>
+              </view>
+            </view>
+          </block>
+          <block wx:else>
+            <view class="members-text">{{form.members || '暂无团队成员信息'}}</view>
+          </block>
+        </block>
+        <textarea class="textarea" placeholder="请输入团队成员姓名，用逗号分隔" value="{{form.members}}" bindinput="onInput" data-field="members" disabled="{{isView}}" wx:else />
       </view>
     </view>
 
@@ -94,5 +113,20 @@
   <view class="status-bar" wx:if="{{isView}}">
     <view class="status-label">当前状态：</view>
     <view class="status-value status-{{detail.status}}">{{detail.statusText}}</view>
+  </view>
+
+  <!-- 查看模式下：成果入口（只读） -->
+  <view class="result-entry" wx:if="{{isView}}" bindtap="goToResultList">
+    <view class="result-entry-left">已提交成果</view>
+    <view class="result-entry-right">
+      <text class="result-count">{{resultCount}}</text>
+      <text class="result-arrow">查看</text>
+    </view>
+  </view>
+
+  <!-- 查看模式下的操作按钮 -->
+  <view class="footer" wx:if="{{isView && detail.status === 'approved'}}">
+    <view class="btn-result" bindtap="goToResult">提交成果</view>
+    <view class="btn-progress" bindtap="goToProgress">上传进度</view>
   </view>
 </view>

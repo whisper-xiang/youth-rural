@@ -1,14 +1,14 @@
 /**
  * 成果管理路由
  */
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const db = require('../config/db');
-const { verifyToken } = require('../middleware/auth');
-const { success, paginate, error } = require('../utils/response');
+const db = require("../config/db");
+const { verifyToken } = require("../middleware/auth");
+const { success, paginate, error } = require("../utils/response");
 
 // 获取成果列表
-router.get('/list', verifyToken, async (req, res) => {
+router.get("/list", verifyToken, async (req, res) => {
   try {
     const { page = 1, pageSize = 10, category, keyword, projectId } = req.query;
     const offset = (page - 1) * pageSize;
@@ -16,22 +16,22 @@ router.get('/list', verifyToken, async (req, res) => {
     let whereClauses = ["r.status = 'published'"];
     let params = [];
 
-    if (category && category !== 'all') {
-      whereClauses.push('r.category = ?');
+    if (category && category !== "all") {
+      whereClauses.push("r.category = ?");
       params.push(category);
     }
 
     if (projectId) {
-      whereClauses.push('r.project_id = ?');
+      whereClauses.push("r.project_id = ?");
       params.push(projectId);
     }
 
     if (keyword) {
-      whereClauses.push('(r.title LIKE ? OR r.description LIKE ?)');
+      whereClauses.push("(r.title LIKE ? OR r.description LIKE ?)");
       params.push(`%${keyword}%`, `%${keyword}%`);
     }
 
-    const whereSQL = whereClauses.join(' AND ');
+    const whereSQL = whereClauses.join(" AND ");
 
     // 查询总数
     const [[{ total }]] = await db.query(
@@ -54,45 +54,53 @@ router.get('/list', verifyToken, async (req, res) => {
     );
 
     paginate(res, rows, total, page, pageSize);
-
   } catch (err) {
-    console.error('Get result list error:', err);
-    error(res, '获取成果列表失败', 500);
+    console.error("Get result list error:", err);
+    error(res, "获取成果列表失败", 500);
   }
 });
 
 // 获取我的成果列表
-router.get('/my-list', verifyToken, async (req, res) => {
+router.get("/my-list", verifyToken, async (req, res) => {
   try {
-    const { page = 1, pageSize = 10 } = req.query;
+    const { page = 1, pageSize = 10, projectId } = req.query;
     const userId = req.user.id;
     const offset = (page - 1) * pageSize;
 
+    let whereClauses = ["r.creator_id = ?"];
+    let params = [userId];
+
+    if (projectId) {
+      whereClauses.push("r.project_id = ?");
+      params.push(projectId);
+    }
+
+    const whereSQL = whereClauses.join(" AND ");
+
     const [[{ total }]] = await db.query(
-      'SELECT COUNT(*) as total FROM result WHERE creator_id = ?',
-      [userId]
+      `SELECT COUNT(*) as total FROM result r WHERE ${whereSQL}`,
+      params
     );
 
     const [rows] = await db.query(
       `SELECT r.*, p.title as project_title
        FROM result r
        LEFT JOIN project p ON r.project_id = p.id
-       WHERE r.creator_id = ?
+       WHERE ${whereSQL}
        ORDER BY r.created_at DESC
        LIMIT ? OFFSET ?`,
-      [userId, parseInt(pageSize), offset]
+      [...params, parseInt(pageSize), offset]
     );
 
     paginate(res, rows, total, page, pageSize);
-
   } catch (err) {
-    console.error('Get my result list error:', err);
-    error(res, '获取成果列表失败', 500);
+    console.error("Get my result list error:", err);
+    error(res, "获取成果列表失败", 500);
   }
 });
 
 // 获取成果详情
-router.get('/detail/:id', verifyToken, async (req, res) => {
+router.get("/detail/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -108,42 +116,70 @@ router.get('/detail/:id', verifyToken, async (req, res) => {
     );
 
     if (!result) {
-      return error(res, '成果不存在');
+      return error(res, "成果不存在");
     }
 
     // 更新浏览次数
-    await db.query('UPDATE result SET view_count = view_count + 1 WHERE id = ?', [id]);
+    await db.query(
+      "UPDATE result SET view_count = view_count + 1 WHERE id = ?",
+      [id]
+    );
 
     // 附件
     const [attachments] = await db.query(
-      'SELECT * FROM result_attachment WHERE result_id = ?',
+      "SELECT * FROM result_attachment WHERE result_id = ?",
       [id]
     );
     result.attachments = attachments;
 
     // 图片
     const [images] = await db.query(
-      'SELECT image_url FROM result_image WHERE result_id = ? ORDER BY sort',
+      "SELECT image_url FROM result_image WHERE result_id = ? ORDER BY sort",
       [id]
     );
-    result.images = images.map(img => img.image_url);
+    result.images = images.map((img) => img.image_url);
 
     success(res, result);
-
   } catch (err) {
-    console.error('Get result detail error:', err);
-    error(res, '获取成果详情失败', 500);
+    console.error("Get result detail error:", err);
+    error(res, "获取成果详情失败", 500);
   }
 });
 
 // 创建成果
-router.post('/create', verifyToken, async (req, res) => {
+router.post("/create", verifyToken, async (req, res) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
-    const { projectId, title, category, description, coverUrl, content, images, attachments } = req.body;
+    const {
+      projectId,
+      title,
+      category,
+      description,
+      coverUrl,
+      content,
+      images,
+      files,
+    } = req.body;
     const userId = req.user.id;
+
+    // 验证必需字段
+    if (!projectId) {
+      return error(res, "项目ID不能为空");
+    }
+
+    // 严格模式：仅已通过项目允许提交成果，且必须是项目负责人
+    const [[project]] = await conn.query(
+      "SELECT id, status FROM project WHERE id = ? AND leader_id = ?",
+      [projectId, userId]
+    );
+    if (!project) {
+      return error(res, "无权限操作该项目");
+    }
+    if (project.status !== "approved") {
+      return error(res, "项目未通过审核，不能提交成果");
+    }
 
     // 创建成果
     const [result] = await conn.query(
@@ -158,80 +194,81 @@ router.post('/create', verifyToken, async (req, res) => {
     if (images && images.length > 0) {
       for (let i = 0; i < images.length; i++) {
         await conn.query(
-          'INSERT INTO result_image (result_id, image_url, sort) VALUES (?, ?, ?)',
+          "INSERT INTO result_image (result_id, image_url, sort) VALUES (?, ?, ?)",
           [resultId, images[i], i]
         );
       }
     }
 
     // 添加附件
-    if (attachments && attachments.length > 0) {
-      for (const att of attachments) {
+    if (files && files.length > 0) {
+      for (const file of files) {
         await conn.query(
-          'INSERT INTO result_attachment (result_id, file_name, file_url, file_size, file_type) VALUES (?, ?, ?, ?, ?)',
-          [resultId, att.name, att.url, att.size, att.type]
+          "INSERT INTO result_attachment (result_id, file_name, file_url, file_size, file_type) VALUES (?, ?, ?, ?, ?)",
+          [resultId, file.name, file.url, file.size, file.type || "unknown"]
         );
       }
     }
 
     await conn.commit();
-    success(res, { id: resultId }, '创建成功');
-
+    success(res, { id: resultId }, "创建成功");
   } catch (err) {
     await conn.rollback();
-    console.error('Create result error:', err);
-    error(res, '创建成果失败', 500);
+    console.error("Create result error:", err);
+    error(res, "创建成果失败", 500);
   } finally {
     conn.release();
   }
 });
 
 // 发布成果
-router.post('/publish/:id', verifyToken, async (req, res) => {
+router.post("/publish/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const [[result]] = await db.query('SELECT * FROM result WHERE id = ?', [id]);
+    const [[result]] = await db.query("SELECT * FROM result WHERE id = ?", [
+      id,
+    ]);
     if (!result) {
-      return error(res, '成果不存在');
+      return error(res, "成果不存在");
     }
     if (result.creator_id !== userId) {
-      return error(res, '无权限操作');
+      return error(res, "无权限操作");
     }
 
     await db.query("UPDATE result SET status = 'published' WHERE id = ?", [id]);
-    success(res, null, '发布成功');
-
+    success(res, null, "发布成功");
   } catch (err) {
-    console.error('Publish result error:', err);
-    error(res, '发布失败', 500);
+    console.error("Publish result error:", err);
+    error(res, "发布失败", 500);
   }
 });
 
 // 删除成果
-router.delete('/delete/:id', verifyToken, async (req, res) => {
+router.delete("/delete/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const [[result]] = await db.query('SELECT * FROM result WHERE id = ?', [id]);
+    const [[result]] = await db.query("SELECT * FROM result WHERE id = ?", [
+      id,
+    ]);
     if (!result) {
-      return error(res, '成果不存在');
+      return error(res, "成果不存在");
     }
-    if (result.creator_id !== userId && req.user.role !== 'school_admin') {
-      return error(res, '无权限删除');
+    if (result.creator_id !== userId && req.user.role !== "school_admin") {
+      return error(res, "无权限删除");
     }
 
-    await db.query('DELETE FROM result WHERE id = ?', [id]);
-    await db.query('DELETE FROM result_image WHERE result_id = ?', [id]);
-    await db.query('DELETE FROM result_attachment WHERE result_id = ?', [id]);
+    await db.query("DELETE FROM result WHERE id = ?", [id]);
+    await db.query("DELETE FROM result_image WHERE result_id = ?", [id]);
+    await db.query("DELETE FROM result_attachment WHERE result_id = ?", [id]);
 
-    success(res, null, '删除成功');
-
+    success(res, null, "删除成功");
   } catch (err) {
-    console.error('Delete result error:', err);
-    error(res, '删除失败', 500);
+    console.error("Delete result error:", err);
+    error(res, "删除失败", 500);
   }
 });
 

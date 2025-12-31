@@ -124,9 +124,16 @@
   flex: 1;
   text-align: center;
   border-right: 1rpx solid #f0f0f0;
+  padding: 8rpx 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 .stat-item:last-child {
   border-right: none;
+}
+.stat-item:active {
+  background: #f8f9fa;
+  transform: scale(0.95);
 }
 .stat-num {
   font-size: 44rpx;

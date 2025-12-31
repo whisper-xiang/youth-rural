@@ -27,15 +27,15 @@
 
   <!-- 快捷统计 -->
   <view class="quick-stats" wx:if="{{isLogin}}">
-    <view class="stat-item">
+    <view class="stat-item" bindtap="goToStats" data-type="project">
       <view class="stat-num">{{stats.projectCount || 12}}</view>
       <view class="stat-label">进行中项目</view>
     </view>
-    <view class="stat-item">
+    <view class="stat-item" bindtap="goToStats" data-type="pending">
       <view class="stat-num">{{stats.pendingCount || 3}}</view>
       <view class="stat-label">待处理</view>
     </view>
-    <view class="stat-item">
+    <view class="stat-item" bindtap="goToStats" data-type="notice">
       <view class="stat-num">{{stats.noticeCount || 5}}</view>
       <view class="stat-label">新通知</view>
     </view>

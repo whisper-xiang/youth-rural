@@ -1,57 +1,82 @@
-const { progressApi } = require('../../utils/api');
-const { uploadImage, BASE_URL } = require('../../utils/request');
+const { progressApi, projectApi } = require("../../utils/api");
+const { uploadImage, BASE_URL } = require("../../utils/request");
 
 Page({
   data: {
-    mode: 'create',
+    mode: "create",
     isView: false,
     id: null,
     detail: null,
+    projectInfo: null,
+    projectStatus: "",
     form: {
-      title: '',
-      date: '',
-      content: '',
+      title: "",
+      date: "",
+      content: "",
       images: [],
-      projectId: ''
+      projectId: "",
     },
-    submitting: false
+    submitting: false,
   },
 
   onLoad(options) {
-    const { mode = 'create', id, projectId } = options;
+    const { mode = "create", id, projectId } = options;
     this.setData({
       mode,
-      isView: mode === 'view',
+      isView: mode === "view",
       id,
-      'form.projectId': projectId || ''
+      "form.projectId": projectId || "",
     });
 
-    if (mode === 'view' && id) {
+    // 如果是创建模式且有projectId，加载项目信息
+    if (mode === "create" && projectId) {
+      this.loadProjectInfo(projectId);
+    }
+
+    if (mode === "view" && id) {
       this.loadDetail(id);
     }
 
     wx.setNavigationBarTitle({
-      title: mode === 'create' ? '上传进度' : '进度详情'
+      title: mode === "create" ? "上传进度" : "进度详情",
     });
+  },
+
+  // 加载项目信息
+  async loadProjectInfo(projectId) {
+    try {
+      const res = await projectApi.getDetail(projectId);
+      this.setData({
+        projectInfo: {
+          id: res.id,
+          title: res.title,
+        },
+        projectStatus: res.status || "",
+      });
+    } catch (err) {
+      console.error("加载项目信息失败:", err);
+    }
   },
 
   // 加载详情
   async loadDetail(id) {
     try {
       const res = await progressApi.getDetail(id);
-      const baseUrl = BASE_URL.replace('/api', '');
+      const baseUrl = BASE_URL.replace("/api", "");
       const detail = {
         ...res,
-        date: res.progress_date ? res.progress_date.slice(0, 10) : '',
-        images: (res.images || []).map(img => img.startsWith('http') ? img : baseUrl + img),
-        comments: (res.comments || []).map(c => ({
+        date: res.progress_date ? res.progress_date.slice(0, 10) : "",
+        images: (res.images || []).map((img) =>
+          img.startsWith("http") ? img : baseUrl + img
+        ),
+        comments: (res.comments || []).map((c) => ({
           ...c,
-          time: c.created_at ? c.created_at.slice(0, 16).replace('T', ' ') : ''
-        }))
+          time: c.created_at ? c.created_at.slice(0, 16).replace("T", " ") : "",
+        })),
       };
       this.setData({ detail });
     } catch (err) {
-      console.error('加载进度详情失败:', err);
+      console.error("加载进度详情失败:", err);
     }
   },
 
@@ -59,14 +84,14 @@ Page({
   onInput(e) {
     const field = e.currentTarget.dataset.field;
     this.setData({
-      [`form.${field}`]: e.detail.value
+      [`form.${field}`]: e.detail.value,
     });
   },
 
   // 日期选择
   onDateChange(e) {
     this.setData({
-      'form.date': e.detail.value
+      "form.date": e.detail.value,
     });
   },
 
@@ -75,14 +100,14 @@ Page({
     const count = 9 - this.data.form.images.length;
     wx.chooseMedia({
       count,
-      mediaType: ['image'],
-      sourceType: ['album', 'camera'],
+      mediaType: ["image"],
+      sourceType: ["album", "camera"],
       success: (res) => {
-        const newImages = res.tempFiles.map(f => f.tempFilePath);
+        const newImages = res.tempFiles.map((f) => f.tempFilePath);
         this.setData({
-          'form.images': [...this.data.form.images, ...newImages]
+          "form.images": [...this.data.form.images, ...newImages],
         });
-      }
+      },
     });
   },
 
@@ -91,7 +116,7 @@ Page({
     const index = e.currentTarget.dataset.index;
     const images = this.data.form.images;
     images.splice(index, 1);
-    this.setData({ 'form.images': images });
+    this.setData({ "form.images": images });
   },
 
   // 预览图片
@@ -99,7 +124,7 @@ Page({
     const src = e.currentTarget.dataset.src;
     wx.previewImage({
       current: src,
-      urls: this.data.detail.images
+      urls: this.data.detail.images,
     });
   },
 
@@ -107,15 +132,15 @@ Page({
   validateForm() {
     const { form } = this.data;
     if (!form.title.trim()) {
-      wx.showToast({ title: '请输入标题', icon: 'none' });
+      wx.showToast({ title: "请输入标题", icon: "none" });
       return false;
     }
     if (!form.date) {
-      wx.showToast({ title: '请选择日期', icon: 'none' });
+      wx.showToast({ title: "请选择日期", icon: "none" });
       return false;
     }
     if (!form.content.trim()) {
-      wx.showToast({ title: '请输入进度内容', icon: 'none' });
+      wx.showToast({ title: "请输入进度内容", icon: "none" });
       return false;
     }
     return true;
@@ -126,15 +151,20 @@ Page({
     if (!this.validateForm()) return;
     if (this.data.submitting) return;
 
+    if (this.data.mode === "create" && this.data.projectStatus !== "approved") {
+      wx.showToast({ title: "项目未通过审核，不能上传进度", icon: "none" });
+      return;
+    }
+
     this.setData({ submitting: true });
 
     try {
       const { form } = this.data;
-      
+
       // 上传图片
       const imageUrls = [];
       for (const img of form.images) {
-        if (img.startsWith('http')) {
+        if (img.startsWith("http")) {
           imageUrls.push(img);
         } else {
           const url = await uploadImage(img);
@@ -143,21 +173,22 @@ Page({
       }
 
       await progressApi.create({
-        project_id: form.projectId,
+        projectId: form.projectId,
         title: form.title,
-        progress_date: form.date,
+        progressDate: form.date,
         content: form.content,
-        images: imageUrls
+        location: form.location,
+        images: imageUrls,
       });
 
-      wx.showToast({ title: '提交成功', icon: 'success' });
+      wx.showToast({ title: "提交成功", icon: "success" });
       setTimeout(() => {
         wx.navigateBack();
       }, 1500);
     } catch (err) {
-      console.error('提交进度失败:', err);
+      console.error("提交进度失败:", err);
     } finally {
       this.setData({ submitting: false });
     }
-  }
+  },
 });

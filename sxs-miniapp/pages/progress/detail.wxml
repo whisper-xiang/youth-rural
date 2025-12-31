@@ -10,6 +10,7 @@
       <view class="detail-meta">
         <text class="meta-item">上传人：{{detail.uploader}}</text>
         <text class="meta-item">团队：{{detail.teamName}}</text>
+        <text class="meta-item" wx:if="{{detail.project_title}}">项目：{{detail.project_title}}</text>
       </view>
     </view>
 
@@ -40,6 +41,11 @@
 
   <!-- 新建/编辑模式 -->
   <block wx:else>
+    <!-- 项目信息 -->
+    <view class="project-info-banner" wx:if="{{projectInfo}}">
+      <view class="project-info-text">正在为项目「{{projectInfo.title}}」上传进度</view>
+    </view>
+    
     <view class="form">
       <view class="section">
         <view class="section-title">进度信息</view>

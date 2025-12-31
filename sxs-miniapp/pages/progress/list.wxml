@@ -1,37 +1,35 @@
 <view class="page">
   <!-- 顶部操作栏 -->
   <view class="header">
-    <view class="header-title">活动进度</view>
+    <view class="header-title">项目进度</view>
     <view class="btn-add" bindtap="addProgress">+ 上传进度</view>
   </view>
 
-  <!-- 进度时间线 -->
-  <view class="timeline" wx:if="{{list.length > 0}}">
-    <view class="timeline-item" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-      <view class="timeline-dot"></view>
-      <view class="timeline-line" wx:if="{{index < list.length - 1}}"></view>
-      <view class="timeline-content">
-        <view class="content-header">
-          <view class="content-title">{{item.title}}</view>
-          <view class="content-date">{{item.date}}</view>
+  <!-- 项目列表 -->
+  <view class="project-list" wx:if="{{projects.length > 0}}">
+    <view class="project-item" wx:for="{{projects}}" wx:key="id" bindtap="goProject" data-id="{{item.id}}" data-title="{{item.title}}">
+      <view class="project-header">
+        <view class="project-title">{{item.title}}</view>
+        <view class="project-status status-{{item.status}}">{{item.statusText}}</view>
+      </view>
+      <view class="project-info">
+        <text class="info-item">📍 {{item.target_area}}</text>
+        <text class="info-item">📅 {{item.start_date}} - {{item.end_date}}</text>
+      </view>
+      <view class="project-progress">
+        <view class="progress-count">
+          <text class="count-number">{{item.progress_count || 0}}</text>
+          <text class="count-label">个进度</text>
         </view>
-        <view class="content-summary">{{item.summary}}</view>
-        <view class="content-images" wx:if="{{item.images && item.images.length > 0}}">
-          <image class="thumb" wx:for="{{item.images}}" wx:for-item="img" wx:key="*this" src="{{img}}" mode="aspectFill" />
-          <view class="image-count" wx:if="{{item.imageCount > 3}}">+{{item.imageCount - 3}}</view>
-        </view>
-        <view class="content-footer">
-          <text class="footer-user">{{item.uploader}}</text>
-          <text class="footer-team">{{item.teamName}}</text>
-        </view>
+        <view class="progress-arrow">→</view>
       </view>
     </view>
   </view>
 
   <!-- 空状态 -->
   <view class="empty" wx:else>
-    <view class="empty-icon">📝</view>
-    <view class="empty-text">暂无进度记录</view>
-    <view class="empty-hint">点击右上角上传活动进度</view>
+    <view class="empty-icon">📋</view>
+    <view class="empty-text">暂无相关项目</view>
+    <view class="empty-hint">请先申报项目或联系管理员</view>
   </view>
 </view>
