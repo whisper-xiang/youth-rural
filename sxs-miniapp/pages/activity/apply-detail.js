@@ -34,15 +34,39 @@ Page({
     },
     detail: null,
     resultCount: 0,
+    canSubmitResult: false,
+    canUploadProgress: false,
+    canCloseProject: false,
     submitting: false,
   },
 
   onLoad(options) {
     const { mode = "create", id } = options;
+
+    const app = getApp();
+    const canSubmitResult = !!(
+      app &&
+      app.hasPermission &&
+      app.hasPermission("result.submit")
+    );
+    const canUploadProgress = !!(
+      app &&
+      app.hasPermission &&
+      app.hasPermission("progress.upload")
+    );
+    const canCloseProject = !!(
+      app &&
+      app.hasPermission &&
+      app.hasPermission("project.close")
+    );
+
     this.setData({
       mode,
       isView: mode === "view",
       id,
+      canSubmitResult,
+      canUploadProgress,
+      canCloseProject,
     });
 
     if (mode === "view" && id) {
@@ -75,6 +99,7 @@ Page({
         pending: "待审核",
         college_approved: "学院已审",
         approved: "已通过",
+        closed: "结项",
         rejected: "已驳回",
       };
       const detail = {
@@ -287,6 +312,11 @@ Page({
       return;
     }
 
+    if (!this.data.canSubmitResult) {
+      wx.showToast({ title: "当前角色不可提交成果", icon: "none" });
+      return;
+    }
+
     const status = this.data.detail && this.data.detail.status;
     if (status !== "approved") {
       wx.showToast({ title: "项目未通过审核，不能提交成果", icon: "none" });
@@ -320,6 +350,11 @@ Page({
       return;
     }
 
+    if (!this.data.canUploadProgress) {
+      wx.showToast({ title: "当前角色不可上传进度", icon: "none" });
+      return;
+    }
+
     const status = this.data.detail && this.data.detail.status;
     if (status !== "approved") {
       wx.showToast({ title: "项目未通过审核，不能上传进度", icon: "none" });
@@ -328,6 +363,38 @@ Page({
 
     wx.navigateTo({
       url: `/pages/progress/detail?mode=create&projectId=${id}`,
+    });
+  },
+
+  closeProject() {
+    const { id, detail } = this.data;
+    if (!id) {
+      wx.showToast({ title: "项目ID不能为空", icon: "none" });
+      return;
+    }
+    if (!this.data.canCloseProject) {
+      wx.showToast({ title: "当前角色不可结项", icon: "none" });
+      return;
+    }
+    if (!detail || detail.status !== "approved") {
+      wx.showToast({ title: "仅已通过项目可结项", icon: "none" });
+      return;
+    }
+
+    wx.showModal({
+      title: "确认结项",
+      content: "结项后将进入评优流程，是否确认结项？",
+      success: async (res) => {
+        if (!res.confirm) return;
+        try {
+          await projectApi.close(id);
+          wx.showToast({ title: "结项成功", icon: "success" });
+          this.loadDetail(id);
+        } catch (err) {
+          console.error("结项失败:", err);
+          wx.showToast({ title: "结项失败", icon: "none" });
+        }
+      },
     });
   },
 });

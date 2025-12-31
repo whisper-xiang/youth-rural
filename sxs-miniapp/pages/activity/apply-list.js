@@ -1,19 +1,34 @@
-const { projectApi } = require('../../utils/api');
+const { projectApi } = require("../../utils/api");
 
 Page({
   data: {
     list: [],
+    canCreate: false,
     page: 1,
     pageSize: 10,
     hasMore: true,
-    loading: false
+    loading: false,
   },
 
   onLoad() {
+    const app = getApp();
+    const canCreate = !!(
+      app &&
+      app.hasPermission &&
+      app.hasPermission("apply.create")
+    );
+    this.setData({ canCreate });
     this.loadList(true);
   },
 
   onShow() {
+    const app = getApp();
+    const canCreate = !!(
+      app &&
+      app.hasPermission &&
+      app.hasPermission("apply.create")
+    );
+    this.setData({ canCreate });
     // 每次显示时刷新列表
     this.loadList(true);
   },
@@ -38,27 +53,31 @@ Page({
     try {
       const res = await projectApi.getList({
         page: currentPage,
-        pageSize: this.data.pageSize
+        pageSize: this.data.pageSize,
       });
 
       const statusMap = {
-        draft: '草稿', pending: '待审核', college_approved: '学院已审',
-        approved: '已通过', rejected: '已驳回'
+        draft: "草稿",
+        pending: "待审核",
+        college_approved: "学院已审",
+        approved: "已通过",
+        closed: "结项",
+        rejected: "已驳回",
       };
 
-      const newList = res.list.map(item => ({
+      const newList = res.list.map((item) => ({
         ...item,
         statusText: statusMap[item.status] || item.status,
-        createTime: item.created_at ? item.created_at.slice(0, 10) : ''
+        createTime: item.created_at ? item.created_at.slice(0, 10) : "",
       }));
 
       this.setData({
         list: refresh ? newList : [...this.data.list, ...newList],
         page: currentPage + 1,
-        hasMore: newList.length === this.data.pageSize
+        hasMore: newList.length === this.data.pageSize,
       });
     } catch (err) {
-      console.error('加载项目列表失败:', err);
+      console.error("加载项目列表失败:", err);
     } finally {
       this.setData({ loading: false });
       wx.stopPullDownRefresh();
@@ -68,7 +87,7 @@ Page({
   // 新建申报
   createNew() {
     wx.navigateTo({
-      url: '/pages/activity/apply-detail?mode=create'
+      url: "/pages/activity/apply-detail?mode=create",
     });
   },
 
@@ -76,7 +95,7 @@ Page({
   goDetail(e) {
     const id = e.currentTarget.dataset.id;
     wx.navigateTo({
-      url: `/pages/activity/apply-detail?id=${id}&mode=view`
+      url: `/pages/activity/apply-detail?id=${id}&mode=view`,
     });
-  }
+  },
 });

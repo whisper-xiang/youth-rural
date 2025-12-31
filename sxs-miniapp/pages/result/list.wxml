@@ -2,7 +2,7 @@
   <!-- 顶部操作栏 -->
   <view class="header">
     <view class="header-title">成果管理</view>
-    <view class="btn-add" bindtap="addResult">+ 提交成果</view>
+    <view class="btn-add" wx:if="{{canSubmit}}" bindtap="addResult">+ 提交成果</view>
   </view>
 
   <!-- 项目列表 -->

@@ -56,17 +56,33 @@
   border-radius: 6rpx;
   margin-left: 16rpx;
 }
+.status-draft {
+  background: #f5f5f5;
+  color: #8c8c8c;
+}
 .status-pending {
   background: #fff7e6;
   color: #fa8c16;
+}
+.status-college_approved {
+  background: #e6f7ff;
+  color: #1890ff;
 }
 .status-approved {
   background: #f6ffed;
   color: #52c41a;
 }
+.status-closed {
+  background: #f0f5ff;
+  color: #2b5aed;
+}
 .status-rejected {
   background: #fff2f0;
   color: #ff4d4f;
+}
+.status-default {
+  background: #f5f5f5;
+  color: #8c8c8c;
 }
 .card-info {
   display: flex;

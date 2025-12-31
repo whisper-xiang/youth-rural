@@ -125,8 +125,13 @@
   </view>
 
   <!-- 查看模式下的操作按钮 -->
-  <view class="footer" wx:if="{{isView && detail.status === 'approved'}}">
-    <view class="btn-result" bindtap="goToResult">提交成果</view>
-    <view class="btn-progress" bindtap="goToProgress">上传进度</view>
+  <view class="footer" wx:if="{{isView && detail.status === 'approved' && (canSubmitResult || canUploadProgress)}}">
+    <view class="btn-result" wx:if="{{canSubmitResult}}" bindtap="goToResult">提交成果</view>
+    <view class="btn-progress" wx:if="{{canUploadProgress}}" bindtap="goToProgress">上传进度</view>
+  </view>
+
+  <!-- 教师结项（仅已通过项目可结项） -->
+  <view class="footer" wx:if="{{isView && canCloseProject && detail.status === 'approved'}}">
+    <view class="btn-close" bindtap="closeProject">结项</view>
   </view>
 </view>

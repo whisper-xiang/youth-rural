@@ -153,6 +153,17 @@
   border-radius: 12rpx;
 }
 
+.btn-close {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: #fff;
+  background: #faad14;
+  border-radius: 12rpx;
+}
+
 /* 状态栏 */
 .status-bar {
   display: flex;
@@ -178,6 +189,9 @@
 }
 .status-approved {
   color: #52c41a;
+}
+.status-closed {
+  color: #2b5aed;
 }
 .status-rejected {
   color: #ff4d4f;

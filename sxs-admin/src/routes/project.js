@@ -145,6 +145,79 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
   }
 });
 
+// 教师结项：项目状态改为 closed，并加入评优项目池
+router.post(
+  "/close/:id",
+  verifyToken,
+  checkRole("teacher"),
+  async (req, res) => {
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const { id } = req.params;
+      const teacherId = req.user.id;
+
+      const [[project]] = await conn.query(
+        "SELECT id, title, status, teacher_id FROM project WHERE id = ?",
+        [id]
+      );
+      if (!project) {
+        await conn.rollback();
+        return error(res, "项目不存在");
+      }
+
+      if (Number(project.teacher_id) !== Number(teacherId)) {
+        await conn.rollback();
+        return error(res, "无权限结项该项目");
+      }
+
+      if (project.status !== "approved") {
+        await conn.rollback();
+        return error(res, "仅已通过项目可结项");
+      }
+
+      // 确定当前评优活动（进行中），没有则创建本年度一条
+      let evaluationId;
+      const [[ongoing]] = await conn.query(
+        "SELECT id FROM evaluation WHERE status = 'ongoing' ORDER BY year DESC, id DESC LIMIT 1"
+      );
+
+      if (ongoing && ongoing.id) {
+        evaluationId = ongoing.id;
+      } else {
+        const year = new Date().getFullYear();
+        const [createEvalRes] = await conn.query(
+          "INSERT INTO evaluation (title, year, description, start_time, status) VALUES (?, ?, ?, NOW(), 'ongoing')",
+          [`${year}年度三下乡评优`, year, "项目结项后自动进入评优"]
+        );
+        evaluationId = createEvalRes.insertId;
+      }
+
+      // 更新项目状态
+      await conn.query("UPDATE project SET status = ? WHERE id = ?", [
+        "closed",
+        id,
+      ]);
+
+      // 加入评优项目池（已存在则忽略）
+      await conn.query(
+        "INSERT IGNORE INTO evaluation_project (evaluation_id, project_id, is_top) VALUES (?, ?, 0)",
+        [evaluationId, id]
+      );
+
+      await conn.commit();
+      success(res, { evaluationId }, "结项成功，已进入评优列表");
+    } catch (err) {
+      await conn.rollback();
+      console.error("Close project error:", err);
+      error(res, "结项失败", 500);
+    } finally {
+      conn.release();
+    }
+  }
+);
+
 // 创建项目
 router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
   const conn = await db.getConnection();

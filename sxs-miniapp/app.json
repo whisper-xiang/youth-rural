@@ -16,6 +16,7 @@
     "pages/evaluate/list",
     "pages/evaluate/detail",
     "pages/notice/list",
+    "pages/notice/create",
     "pages/notice/detail"
   ],
   "window": {

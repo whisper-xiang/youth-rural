@@ -22,7 +22,7 @@
         <view class="role-icon">👨‍🏫</view>
         <view class="role-info">
           <view class="role-name">指导教师</view>
-          <view class="role-desc">查看项目进度、指导学生实践</view>
+          <view class="role-desc">查看项目进度、接项、指导学生实践</view>
         </view>
         <view class="role-check" wx:if="{{selectedRole === 'teacher'}}">✓</view>
       </view>

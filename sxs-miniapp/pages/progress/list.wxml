@@ -2,7 +2,7 @@
   <!-- 顶部操作栏 -->
   <view class="header">
     <view class="header-title">项目进度</view>
-    <view class="btn-add" bindtap="addProgress">+ 上传进度</view>
+    <view class="btn-add" wx:if="{{canUpload}}" bindtap="addProgress">+ 上传进度</view>
   </view>
 
   <!-- 项目列表 -->

@@ -2,7 +2,7 @@
   <!-- 顶部操作栏 -->
   <view class="header">
     <view class="header-title">我的申报</view>
-    <view class="btn-add" bindtap="createNew">+ 新建申报</view>
+    <view class="btn-add" wx:if="{{canCreate}}" bindtap="createNew">+ 新建申报</view>
   </view>
 
   <!-- 申报列表 -->
@@ -29,6 +29,7 @@
   <view class="empty" wx:else>
     <view class="empty-icon">📋</view>
     <view class="empty-text">暂无申报项目</view>
-    <view class="empty-hint">点击右上角"新建申报"开始</view>
+    <view class="empty-hint" wx:if="{{canCreate}}">点击右上角"新建申报"开始</view>
+    <view class="empty-hint" wx:else>当前角色不可新建申报，可查看申报详情与审核状态</view>
   </view>
 </view>

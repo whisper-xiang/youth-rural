@@ -8,15 +8,15 @@
 
   <!-- 评优列表 -->
   <view class="list" wx:if="{{filteredList.length > 0}}">
-    <view class="card" wx:for="{{filteredList}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="card" wx:for="{{filteredList}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" data-project-id="{{item.project_id}}">
       <view class="card-header">
         <view class="card-title">{{item.title}}</view>
         <view class="card-status status-{{item.status}}">{{item.statusText}}</view>
       </view>
       <view class="card-body">
         <view class="info-row">
-          <text class="info-label">团队名称：</text>
-          <text class="info-value">{{item.teamName}}</text>
+          <text class="info-label">负责人：</text>
+          <text class="info-value">{{item.leaderName}}</text>
         </view>
         <view class="info-row">
           <text class="info-label">所属学院：</text>
@@ -34,8 +34,8 @@
         <view class="score-total">/ 100</view>
       </view>
       <!-- 待评审显示按钮 -->
-      <view class="card-action" wx:if="{{item.status === 'pending'}}">
-        <view class="btn-evaluate">立即评审</view>
+      <view class="card-action" wx:if="{{canScore && item.status === 'pending'}}">
+        <view class="btn-evaluate" catchtap="goDetail" data-id="{{item.id}}" data-project-id="{{item.project_id}}">立即评审</view>
       </view>
     </view>
   </view>

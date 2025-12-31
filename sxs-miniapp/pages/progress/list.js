@@ -3,10 +3,19 @@ const { progressApi, projectApi } = require("../../utils/api");
 Page({
   data: {
     projects: [],
+    canUpload: false,
     loading: false,
   },
 
   onLoad() {
+    const app = getApp();
+    const canUpload = !!(
+      app &&
+      app.hasPermission &&
+      app.hasPermission("progress.upload")
+    );
+    this.setData({ canUpload });
+
     // 检查登录状态
     const token = wx.getStorageSync("token");
     if (!token) {
@@ -26,6 +35,14 @@ Page({
   },
 
   onShow() {
+    const app = getApp();
+    const canUpload = !!(
+      app &&
+      app.hasPermission &&
+      app.hasPermission("progress.upload")
+    );
+    this.setData({ canUpload });
+
     this.loadProjects();
   },
 
@@ -84,6 +101,7 @@ Page({
       pending: "待审核",
       college_approved: "学院已审",
       approved: "已通过",
+      closed: "结项",
       rejected: "已驳回",
     };
     return statusMap[status] || status;
@@ -103,6 +121,11 @@ Page({
 
   // 上传进度（通用）
   addProgress() {
+    if (!this.data.canUpload) {
+      wx.showToast({ title: "当前角色不可上传进度", icon: "none" });
+      return;
+    }
+
     const approvedProjects = this.data.projects.filter(
       (p) => p && p.status === "approved"
     );

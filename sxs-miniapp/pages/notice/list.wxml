@@ -1,4 +1,10 @@
 <view class="page">
+  <!-- 顶部操作栏 -->
+  <view class="header">
+    <view class="header-title">通知公告</view>
+    <view class="btn-add" wx:if="{{canPublish}}" bindtap="goCreate">+ 发布通知</view>
+  </view>
+
   <!-- 顶部分类 -->
   <view class="tabs">
     <view class="tab {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>

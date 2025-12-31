@@ -3,6 +3,30 @@
   background: #f7f8fa;
 }
 
+/* 顶部操作栏 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.header-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.btn-add {
+  font-size: 26rpx;
+  color: #fff;
+  background: #2b5aed;
+  padding: 12rpx 24rpx;
+  border-radius: 8rpx;
+}
+
 /* 顶部分类标签 */
 .tabs {
   display: flex;

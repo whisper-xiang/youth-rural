@@ -1,0 +1,39 @@
+<view class="page">
+  <view class="form">
+    <view class="form-item">
+      <view class="label">标题</view>
+      <input class="input" placeholder="请输入标题" value="{{form.title}}" bindinput="onInput" data-field="title" />
+    </view>
+
+    <view class="form-item">
+      <view class="label">类型</view>
+      <picker mode="selector" range="{{typeOptions}}" range-key="label" value="{{typeIndex}}" bindchange="onTypeChange">
+        <view class="picker">{{typeOptions[typeIndex].label}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <view class="label">发布单位</view>
+      <input class="input" placeholder="如：某某学院/校团委" value="{{form.source}}" bindinput="onInput" data-field="source" />
+    </view>
+
+    <view class="form-item">
+      <view class="label">摘要</view>
+      <textarea class="textarea" placeholder="请输入摘要（列表展示）" value="{{form.summary}}" bindinput="onInput" data-field="summary" />
+    </view>
+
+    <view class="form-item">
+      <view class="label">正文</view>
+      <textarea class="textarea textarea-content" placeholder="请输入正文内容" value="{{form.content}}" bindinput="onInput" data-field="content" />
+    </view>
+
+    <view class="form-item form-item-inline">
+      <view class="label">置顶</view>
+      <switch checked="{{form.isTop}}" bindchange="onTopChange" />
+    </view>
+  </view>
+
+  <view class="footer">
+    <view class="btn-submit" bindtap="submit">发布</view>
+  </view>
+</view>
