@@ -64,6 +64,7 @@ Page({
         approved: "审核通过",
         closed: "已结项",
         rejected: "已驳回",
+        withdrawn: "已撤回",
       };
 
       const newList = res.list.map((item) => ({

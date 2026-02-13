@@ -79,6 +79,7 @@ Page({
       pending: "待审核",
       approved: "已发布",
       rejected: "已驳回",
+      withdrawn: "已撤回",
     };
     return statusMap[status] || status;
   },

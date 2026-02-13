@@ -7,6 +7,30 @@
 CREATE DATABASE IF NOT EXISTS sxs_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE sxs_db;
 
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `sys_log`;
+DROP TABLE IF EXISTS `sys_message`;
+DROP TABLE IF EXISTS `user_favorite`;
+DROP TABLE IF EXISTS `notice_read`;
+DROP TABLE IF EXISTS `notice_attachment`;
+DROP TABLE IF EXISTS `notice`;
+DROP TABLE IF EXISTS `evaluation_score`;
+DROP TABLE IF EXISTS `evaluation_project`;
+DROP TABLE IF EXISTS `evaluation`;
+DROP TABLE IF EXISTS `result_image`;
+DROP TABLE IF EXISTS `result_attachment`;
+DROP TABLE IF EXISTS `result`;
+DROP TABLE IF EXISTS `progress_comment`;
+DROP TABLE IF EXISTS `progress_image`;
+DROP TABLE IF EXISTS `progress`;
+DROP TABLE IF EXISTS `approval_record`;
+DROP TABLE IF EXISTS `project_attachment`;
+DROP TABLE IF EXISTS `project_member`;
+DROP TABLE IF EXISTS `project`;
+DROP TABLE IF EXISTS `sys_user`;
+DROP TABLE IF EXISTS `sys_college`;
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- ============================================
 -- 1. 用户与权限模块
 -- ============================================
@@ -370,27 +394,5 @@ CREATE TABLE `sys_log` (
 ) COMMENT '操作日志表';
 
 -- ============================================
--- 初始数据
+-- 初始数据已移至 seed.sql
 -- ============================================
-
--- 插入学院数据
-INSERT INTO `sys_college` (`name`, `code`, `sort`) VALUES
-('经济管理学院', 'JG', 1),
-('信息工程学院', 'XX', 2),
-('机械工程学院', 'JX', 3),
-('文学与传媒学院', 'WC', 4),
-('外国语学院', 'WY', 5),
-('艺术设计学院', 'YS', 6),
-('马克思主义学院', 'MK', 7),
-('数学与统计学院', 'SX', 8);
-
--- 插入管理员账号 (密码: 123456 的 bcrypt 加密)
-INSERT INTO `sys_user` (`username`, `password`, `real_name`, `role`, `status`) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '系统管理员', 'school_admin', 1);
-
--- 插入测试用户
-INSERT INTO `sys_user` (`username`, `password`, `real_name`, `phone`, `role`, `college_id`, `status`) VALUES
-('2021001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '张三', '13800138001', 'student', 1, 1),
-('T001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '李教授', '13800138002', 'teacher', 1, 1),
-('CA001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '王主任', '13800138003', 'college_admin', 1, 1),
-('E001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '陈教授', '13800138004', 'expert', NULL, 1);

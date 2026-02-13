@@ -70,81 +70,53 @@
     </view>
     <view class="modal-body">
       <view class="process-notice">
-        <view class="notice-icon">⚠️</view>
+        <view class="notice-icon">💡</view>
         <view class="notice-text">
-          <view class="notice-title">重要说明</view>
-          <view class="notice-desc">指导老师确认前，申报信息可修改编辑；确认后基本信息不可修改，只能补充项目成果</view>
+          <view class="notice-title">操作指南</view>
+          <view class="notice-desc">项目一旦提交将进入审批流，立项后请及时在工作台记录实践点赞并上传成果。</view>
         </view>
       </view>
       <scroll-view class="process-scroll" scroll-y>
         <view class="process-step">
           <view class="step-number">1</view>
           <view class="step-info">
-            <view class="step-title">创建申报 <text class="step-role">（学生）</text></view>
-            <view class="step-desc">填写项目基本信息、团队成员、指导老师、预算明细、实践计划等完整材料</view>
+            <view class="step-title">项目申报 <text class="step-role">（学生）</text></view>
+            <view class="step-desc">填写项目信息、成员名单及实践计划。提交后直接进入审批流程。</view>
           </view>
         </view>
         <view class="process-step">
           <view class="step-number">2</view>
           <view class="step-info">
-            <view class="step-title">指导确认 <text class="step-role">（指导老师）</text></view>
-            <view class="step-desc">指导老师审核申报材料，确认项目计划可行性，确认后自动提交学院审核</view>
+            <view class="step-title">两级审核 <text class="step-role">（学院+学校）</text></view>
+            <view class="step-desc">学院进行初审，学校进行终审。通过后项目正式立项。</view>
           </view>
         </view>
         <view class="process-step">
           <view class="step-number">3</view>
           <view class="step-info">
-            <view class="step-title">学院初审 <text class="step-role">（学院管理员）</text></view>
-            <view class="step-desc">审核申报合理性、团队资格、预算可行性，提供修改建议</view>
+            <view class="step-title">立项实施 <text class="step-role">（团队）</text></view>
+            <view class="step-desc">按计划开展活动，在小程序中记录实践进度，指导老师在线点评。</view>
           </view>
         </view>
         <view class="process-step">
           <view class="step-number">4</view>
           <view class="step-info">
-            <view class="step-title">校级终审 <text class="step-role">（校级管理员）</text></view>
-            <view class="step-desc">评估项目创新性、社会影响，确认是否符合全校标准并立项</view>
+            <view class="step-title">成果提交 <text class="step-role">（学生）</text></view>
+            <view class="step-desc">实践结束，提交调研报告、视频等最终成果，作为评优依据。</view>
           </view>
         </view>
         <view class="process-step">
           <view class="step-number">5</view>
           <view class="step-info">
-            <view class="step-title">项目实施 <text class="step-role">（学生+老师）</text></view>
-            <view class="step-desc">立项后按计划开展活动，定期提交进度报告，导师全程指导监督</view>
+            <view class="step-title">专家评审 <text class="step-role">（专家）</text></view>
+            <view class="step-desc">评审专家对提交的成果进行多维度匿名评分，确保公平公正。</view>
           </view>
         </view>
         <view class="process-step">
           <view class="step-number">6</view>
           <view class="step-info">
-            <view class="step-title">结项申请 <text class="step-role">（学生）</text></view>
-            <view class="step-desc">项目完成后提交结项报告、成果展示、财务报告，申请结项审核</view>
-          </view>
-        </view>
-        <view class="process-step">
-          <view class="step-number">7</view>
-          <view class="step-info">
-            <view class="step-title">指导确认 <text class="step-role">（指导老师）</text></view>
-            <view class="step-desc">指导老师审核结项材料，确认项目成果和质量，确认后自动提交学院审核</view>
-          </view>
-        </view>
-        <view class="process-step">
-          <view class="step-number">8</view>
-          <view class="step-info">
-            <view class="step-title">学院审核 <text class="step-role">（学院管理员）</text></view>
-            <view class="step-desc">审核结项材料完整性和质量，确认后提交校级审核</view>
-          </view>
-        </view>
-        <view class="process-step">
-          <view class="step-number">9</view>
-          <view class="step-info">
-            <view class="step-title">校级审核 <text class="step-role">（校级管理员）</text></view>
-            <view class="step-desc">最终审核结项材料，确认后结项成功，进入评优流程</view>
-          </view>
-        </view>
-        <view class="process-step">
-          <view class="step-number">10</view>
-          <view class="step-info">
-            <view class="step-title">项目评优 <text class="step-role">（评审专家+校级管理员）</text></view>
-            <view class="step-desc">符合结项标准的项目参与评优，专家匿名评审，公开评选结果</view>
+            <view class="step-title">评优结项 <text class="step-role">（校级管理员）</text></view>
+            <view class="step-desc">公示评优排名与获奖等级，项目正式结项，生成社会实践证明。</view>
           </view>
         </view>
       </scroll-view>

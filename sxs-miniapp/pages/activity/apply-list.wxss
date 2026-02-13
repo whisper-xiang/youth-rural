@@ -186,6 +186,10 @@
   background: #fff2f0;
   color: #ff4d4f;
 }
+.status-withdrawn {
+  background: #f5f5f5;
+  color: #8c8c8c;
+}
 .status-default {
   background: #f5f5f5;
   color: #8c8c8c;

@@ -39,7 +39,7 @@ router.get('/list', verifyToken, async (req, res) => {
        LEFT JOIN sys_user u ON n.publisher_id = u.id
        LEFT JOIN notice_read nr ON n.id = nr.notice_id AND nr.user_id = ?
        WHERE ${whereSQL}
-       ORDER BY n.is_top DESC, n.publish_time DESC
+       ORDER BY n.publish_time DESC
        LIMIT ? OFFSET ?`,
       [userId, ...params, parseInt(pageSize), offset]
     );

@@ -91,6 +91,15 @@ router.get("/detail/:projectId", verifyToken, async (req, res) => {
       return error(res, "项目不存在");
     }
 
+    // 评优信息
+    const [[evaluation]] = await db.query(
+      `SELECT ep.*, e.title as evaluation_title 
+       FROM evaluation_project ep 
+       LEFT JOIN evaluation e ON ep.evaluation_id = e.id
+       WHERE ep.project_id = ?`,
+      [projectId],
+    );
+
     // 成果材料
     const [results] = await db.query(
       `SELECT id, title, category, cover_url, created_at
@@ -104,11 +113,22 @@ router.get("/detail/:projectId", verifyToken, async (req, res) => {
       [projectId, userId],
     );
 
+    // 所有专家的评分和意见
+    const [allScores] = await db.query(
+      `SELECT es.total_score, es.comment, u.real_name as expert_name
+       FROM evaluation_score es
+       LEFT JOIN sys_user u ON es.expert_id = u.id
+       WHERE es.project_id = ?`,
+      [projectId],
+    );
+
     success(res, {
       ...project,
+      evaluation,
       results,
       myScore: myScore || null,
       isEvaluated: !!myScore,
+      allScores: allScores || [],
     });
   } catch (err) {
     console.error("Get evaluation detail error:", err);

@@ -199,6 +199,9 @@
 .icon-notice {
   background: linear-gradient(135deg, #fcc419 0%, #ffd43b 100%);
 }
+.icon-notice-manage {
+  background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+}
 .icon-ranking {
   background: linear-gradient(135deg, #ff922b 0%, #ffa94d 100%);
 }

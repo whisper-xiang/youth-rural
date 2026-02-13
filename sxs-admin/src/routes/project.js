@@ -21,8 +21,10 @@ router.get("/list", verifyToken, async (req, res) => {
 
     // 根据角色过滤
     if (role === "student") {
-      whereClauses.push("p.leader_id = ?");
-      params.push(userId);
+      whereClauses.push(
+        "(p.leader_id = ? OR EXISTS (SELECT 1 FROM project_member pm WHERE pm.project_id = p.id AND pm.user_id = ?))",
+      );
+      params.push(userId, userId);
     } else if (role === "teacher") {
       whereClauses.push("p.teacher_id = ?");
       params.push(userId);
@@ -64,9 +66,11 @@ router.get("/list", verifyToken, async (req, res) => {
     // 查询列表
     const [rows] = await db.query(
       `SELECT p.*, 
+              p.target_area as location,
+              (SELECT COUNT(*) FROM project_member pm WHERE pm.project_id = p.id) as memberCount,
               (SELECT COUNT(*) FROM progress pg WHERE pg.project_id = p.id) as progress_count,
               (SELECT COUNT(*) FROM result r WHERE r.project_id = p.id AND r.creator_id = ?) as my_result_count,
-              u.real_name as leader_name,
+              u.real_name as leader,
               t.real_name as teacher_name,
               c.name as college_name
        FROM project p
@@ -94,8 +98,8 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
     // 项目基本信息
     const [[project]] = await db.query(
       `SELECT p.*, 
-              u.real_name as leader_name, u.phone as leader_phone,
-              t.real_name as teacher_name, t.phone as teacher_phone,
+              u.real_name as leader_name, IFNULL(p.leader_phone, u.phone) as leader_phone,
+              IFNULL(p.teacher_name, t.real_name) as teacher_name, t.phone as teacher_phone,
               c.name as college_name
        FROM project p
        LEFT JOIN sys_user u ON p.leader_id = u.id
@@ -111,7 +115,10 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
 
     // 团队成员
     const [members] = await db.query(
-      `SELECT pm.*, u.real_name as name, u.phone
+      `SELECT pm.*, 
+              IFNULL(u.real_name, pm.member_name) as name, 
+              IFNULL(u.phone, pm.phone) as phone,
+              IFNULL(u.username, pm.student_id) as student_id
        FROM project_member pm
        LEFT JOIN sys_user u ON pm.user_id = u.id
        WHERE pm.project_id = ?`,
@@ -254,12 +261,19 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
       endDate,
       budget,
       teacherId,
+      teacherName,
+      leaderPhone,
       members,
+      plan,
+      expected_result,
     } = req.body;
     const userId = req.user.id;
 
     // 处理teacherId，空字符串转为null
-    const processedTeacherId = teacherId && teacherId.trim() ? teacherId : null;
+    const processedTeacherId =
+      teacherId && (typeof teacherId === "number" || teacherId.trim())
+        ? teacherId
+        : null;
 
     // 获取用户学院
     const [[user]] = await conn.query(
@@ -274,19 +288,23 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
 
     // 创建项目
     const [result] = await conn.query(
-      `INSERT INTO project (project_no, title, category, description, target_area, start_date, end_date, budget, leader_id, teacher_id, college_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+      `INSERT INTO project (project_no, title, category, description, plan, expected_result, target_area, start_date, end_date, budget, leader_id, leader_phone, teacher_id, teacher_name, college_id, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
       [
         projectNo,
         title,
         category,
         description,
+        plan || null,
+        expected_result || null,
         targetArea,
         startDate,
         endDate,
         budget,
         userId,
+        leaderPhone || null,
         processedTeacherId,
+        teacherName || null,
         user.college_id,
       ],
     );
@@ -300,12 +318,41 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
     );
 
     // 添加其他成员
-    if (members && members.length > 0) {
-      for (const member of members) {
-        await conn.query(
-          `INSERT INTO project_member (project_id, user_id, role, responsibility) VALUES (?, ?, 'member', ?)`,
-          [projectId, member.userId, member.responsibility],
-        );
+    if (members) {
+      const memberList =
+        typeof members === "string"
+          ? members.split(/[\n;；,，]/).filter((s) => s.trim())
+          : Array.isArray(members)
+            ? members
+            : [];
+
+      for (const mStr of memberList) {
+        if (typeof mStr === "string") {
+          const [name, studentId, phone] = mStr.split("-").map((s) => s.trim());
+          if (name) {
+            // 尝试查找系统内用户，若不存在则仅存基本信息
+            let memberUserId = null;
+            if (studentId) {
+              const [[u]] = await conn.query(
+                "SELECT id FROM sys_user WHERE username = ?",
+                [studentId],
+              );
+              if (u) memberUserId = u.id;
+            }
+
+            await conn.query(
+              `INSERT INTO project_member (project_id, user_id, role, member_name, student_id, phone) 
+               VALUES (?, ?, 'member', ?, ?, ?)`,
+              [projectId, memberUserId, name, studentId || null, phone || null],
+            );
+          }
+        } else if (mStr.userId) {
+          // 兼容旧格式
+          await conn.query(
+            `INSERT INTO project_member (project_id, user_id, role, responsibility) VALUES (?, ?, 'member', ?)`,
+            [projectId, mStr.userId, mStr.responsibility],
+          );
+        }
       }
     }
 
@@ -344,10 +391,18 @@ router.put("/update/:id", verifyToken, async (req, res) => {
       endDate,
       budget,
       teacherId,
+      teacherName,
+      leaderPhone,
+      members,
+      plan,
+      expected_result,
     } = req.body;
 
     // 处理teacherId，空字符串转为null
-    const processedTeacherId = teacherId && teacherId.trim() ? teacherId : null;
+    const processedTeacherId =
+      teacherId && (typeof teacherId === "number" || teacherId.trim())
+        ? teacherId
+        : null;
 
     // 检查权限
     const [[project]] = await db.query("SELECT * FROM project WHERE id = ?", [
@@ -359,37 +414,98 @@ router.put("/update/:id", verifyToken, async (req, res) => {
     if (project.leader_id !== req.user.id && req.user.role !== "school_admin") {
       return error(res, "无权限修改");
     }
-    if (project.status !== "rejected" && req.user.role !== "school_admin") {
+    if (
+      project.status !== "rejected" &&
+      project.status !== "withdrawn" &&
+      project.status !== "pending" &&
+      req.user.role !== "school_admin"
+    ) {
       return error(res, "当前状态不允许修改");
     }
 
-    await db.query(
-      `UPDATE project SET title = ?, category = ?, description = ?, target_area = ?, 
-       start_date = ?, end_date = ?, budget = ?, teacher_id = ?
-       WHERE id = ?`,
-      [
-        title,
-        category,
-        description,
-        targetArea,
-        startDate,
-        endDate,
-        budget,
-        processedTeacherId,
-        id,
-      ],
-    );
+    const conn = await db.getConnection();
+    try {
+      await conn.beginTransaction();
 
-    await safeCreateNotice({
-      publisherId: req.user.id,
-      type: "activity",
-      title: `更新项目：${project.title}`,
-      summary: "项目信息已更新",
-      content: `用户更新了项目「${project.title}」的基本信息。`,
-      source: "项目管理",
-    });
+      await conn.query(
+        `UPDATE project SET title = ?, category = ?, description = ?, plan = ?, expected_result = ?, target_area = ?, 
+         start_date = ?, end_date = ?, budget = ?, teacher_id = ?, teacher_name = ?, leader_phone = ?
+         WHERE id = ?`,
+        [
+          title,
+          category,
+          description,
+          plan || null,
+          expected_result || null,
+          targetArea,
+          startDate,
+          endDate,
+          budget,
+          processedTeacherId,
+          teacherName || null,
+          leaderPhone || null,
+          id,
+        ],
+      );
 
-    success(res, null, "更新成功");
+      // 更新成员
+      if (members) {
+        // 先删除旧的普通成员（保留负责人）
+        await conn.query(
+          "DELETE FROM project_member WHERE project_id = ? AND role = 'member'",
+          [id],
+        );
+
+        const memberList =
+          typeof members === "string"
+            ? members.split(/[\n;；,，]/).filter((s) => s.trim())
+            : Array.isArray(members)
+              ? members
+              : [];
+
+        for (const mStr of memberList) {
+          if (typeof mStr === "string") {
+            const [name, studentId, phone] = mStr
+              .split("-")
+              .map((s) => s.trim());
+            if (name) {
+              let memberUserId = null;
+              if (studentId) {
+                const [[u]] = await conn.query(
+                  "SELECT id FROM sys_user WHERE username = ?",
+                  [studentId],
+                );
+                if (u) memberUserId = u.id;
+              }
+
+              await conn.query(
+                `INSERT INTO project_member (project_id, user_id, role, member_name, student_id, phone) 
+                 VALUES (?, ?, 'member', ?, ?, ?)`,
+                [id, memberUserId, name, studentId || null, phone || null],
+              );
+            }
+          }
+        }
+      }
+
+      await safeCreateNotice({
+        conn,
+        publisherId: req.user.id,
+        type: "activity",
+        title: `更新项目：${project.title}`,
+        summary: "项目信息已更新",
+        content: `用户更新了项目「${project.title}」的基本信息及成员。`,
+        source: "项目管理",
+      });
+
+      await conn.commit();
+      success(res, null, "更新成功");
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
   } catch (err) {
     console.error("Update project error:", err);
     error(res, "更新项目失败", 500);
@@ -410,7 +526,7 @@ router.post("/submit/:id", verifyToken, async (req, res) => {
     if (project.leader_id !== req.user.id) {
       return error(res, "无权限操作");
     }
-    if (!["rejected"].includes(project.status)) {
+    if (!["rejected", "withdrawn"].includes(project.status)) {
       return error(res, "当前状态不允许提交");
     }
 
@@ -432,6 +548,45 @@ router.post("/submit/:id", verifyToken, async (req, res) => {
   } catch (err) {
     console.error("Submit project error:", err);
     error(res, "提交失败", 500);
+  }
+});
+
+// 撤销审批
+router.post("/revoke/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [[project]] = await db.query("SELECT * FROM project WHERE id = ?", [
+      id,
+    ]);
+    if (!project) {
+      return error(res, "项目不存在");
+    }
+    if (project.leader_id !== req.user.id) {
+      return error(res, "无权限操作");
+    }
+    if (project.status !== "pending") {
+      return error(res, "仅待审核的项目可以撤销");
+    }
+
+    await db.query("UPDATE project SET status = ? WHERE id = ?", [
+      "withdrawn",
+      id,
+    ]);
+
+    await safeCreateNotice({
+      publisherId: req.user.id,
+      type: "activity",
+      title: `撤销申请：${project.title}`,
+      summary: "项目申请已撤回",
+      content: `用户撤回了项目「${project.title}」的审批申请，状态变更为已撤回。`,
+      source: "项目管理",
+    });
+
+    success(res, null, "撤销成功");
+  } catch (err) {
+    console.error("Revoke project error:", err);
+    error(res, "撤销失败", 500);
   }
 });
 

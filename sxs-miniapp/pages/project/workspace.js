@@ -1,4 +1,11 @@
 // 项目工作台页面
+const {
+  projectApi,
+  progressApi,
+  resultApi,
+  evaluationApi,
+} = require("../../utils/api");
+const { upload, uploadImage } = require("../../utils/request");
 const app = getApp();
 
 Page({
@@ -6,12 +13,14 @@ Page({
     projectId: "",
     currentTab: 0,
     projectInfo: {},
+    evaluationInfo: null,
     tabs: [
       { name: "项目详情", icon: "📄" },
       { name: "进度记录", icon: "📊" },
       { name: "成果材料", icon: "📎" },
       { name: "结项申请", icon: "🧾" },
       { name: "老师反馈", icon: "💬" },
+      { name: "评优情况", icon: "🏆" },
     ],
     progressList: [],
     resultFiles: {
@@ -19,6 +28,7 @@ Page({
       documents: [],
       videos: [],
     },
+    hasResultFiles: false,
     closureInfo: {
       summary: "",
       achievements: "",
@@ -51,140 +61,149 @@ Page({
     }
 
     this.setData({ projectId });
-    this.loadProjectInfo();
+    this.loadAllData();
   },
 
   onShow() {
     // 页面显示时刷新数据
     if (this.data.projectId) {
-      this.loadProjectInfo();
+      this.loadAllData();
+    }
+  },
+
+  // 加载所有数据
+  async loadAllData() {
+    wx.showLoading({ title: "加载中..." });
+    try {
+      await Promise.all([
+        this.loadProjectInfo(),
+        this.loadProgressList(),
+        this.loadResultFiles(),
+        this.loadEvaluationInfo(),
+      ]);
+    } catch (err) {
+      console.error("加载数据失败:", err);
+    } finally {
+      wx.hideLoading();
     }
   },
 
   // 加载项目信息
   async loadProjectInfo() {
     try {
-      // 这里应该调用API获取项目详细信息
-      // const projectInfo = await projectApi.getProjectDetail(this.data.projectId);
+      const detail = await projectApi.getDetail(this.data.projectId);
 
-      // 模拟数据
-      const mockProjectInfo = {
-        id: this.data.projectId,
-        name: "乡村振兴调研项目",
-        type: "社会实践类",
-        userRole: "leader", // leader | member
-        userRoleText: "负责人",
-        status: "APPROVED",
-        statusText: "已立项，项目进行中",
-        statusClass: "status-progress",
-        statusIcon: "🚀",
-        createTime: "2026-01-15",
-        startDate: "2026-01-20",
-        endDate: "2026-02-20",
-        budget: "5000",
-        team: [
-          {
-            id: 1,
-            name: "张三",
-            role: "负责人",
-            phone: "13800138000",
-          },
-          {
-            id: 2,
-            name: "李四",
-            role: "成员",
-            phone: "13800138001",
-          },
-          {
-            id: 3,
-            name: "王五",
-            role: "成员",
-            phone: "",
-          },
-        ],
-        teacher: {
-          name: "刘教授",
-          title: "副教授",
-          department: "社会学学院",
-          email: "liu@university.edu.cn",
+      // 映射状态文本和样式
+      const statusMap = {
+        pending: { text: "待审核", class: "status-pending", icon: "⏳" },
+        college_approved: {
+          text: "院审通过",
+          class: "status-progress",
+          icon: "🏛️",
         },
-        timeline: [
-          {
-            title: "项目申报",
-            description: "提交项目申报材料",
-            status: "completed",
-            time: "2026-01-15 10:30",
-          },
-          {
-            title: "指导确认",
-            description: "指导老师确认项目计划",
-            status: "completed",
-            time: "2026-01-16 14:20",
-          },
-          {
-            title: "学院审核",
-            description: "学院审核申报材料",
-            status: "completed",
-            time: "2026-01-17 09:15",
-          },
-          {
-            title: "校级终审",
-            description: "校级审核并立项",
-            status: "completed",
-            time: "2026-01-18 16:45",
-          },
-          {
-            title: "项目实施",
-            description: "按计划开展实践活动",
-            status: "current",
-            time: "",
-          },
-        ],
+        school_approved: {
+          text: "校审通过",
+          class: "status-progress",
+          icon: "🏫",
+        },
+        approved: { text: "已立项", class: "status-progress", icon: "🚀" },
+        closed: { text: "已结项", class: "status-completed", icon: "✅" },
+        rejected: { text: "已驳回", class: "status-rejected", icon: "❌" },
+        withdrawn: { text: "已撤回", class: "status-withdrawn", icon: "↩️" },
       };
 
-      this.setData({ projectInfo: mockProjectInfo });
+      const statusInfo = statusMap[detail.status] || {
+        text: detail.status,
+        class: "",
+        icon: "",
+      };
 
-      // 加载其他数据
-      this.loadProgressList();
-      this.loadResultFiles();
-      this.loadClosureInfo();
-      this.loadFeedbackList();
+      const projectInfo = {
+        id: detail.id,
+        name: detail.title,
+        type: detail.category,
+        userRole:
+          detail.leader_id == app.globalData.userInfo?.id ? "leader" : "member",
+        userRoleText:
+          detail.leader_id == app.globalData.userInfo?.id ? "负责人" : "成员",
+        status: detail.status,
+        statusText: statusInfo.text,
+        statusClass: statusInfo.class,
+        statusIcon: statusInfo.icon,
+        is_excellent: detail.is_excellent || false,
+        createTime: this.formatDate(detail.created_at),
+        startDate: this.formatDate(detail.start_date),
+        endDate: this.formatDate(detail.end_date),
+        budget: detail.budget,
+        team: detail.members.map((m) => ({
+          id: m.id,
+          name: m.name,
+          role: m.user_id == detail.leader_id ? "负责人" : "成员",
+          phone: m.phone,
+        })),
+        teacher: {
+          name: detail.teacher_name,
+          title: "指导教师",
+        },
+        timeline: (detail.approvals || []).map((a) => ({
+          title: a.node_name || "审核环节",
+          description: a.opinion || "已通过",
+          status: "completed",
+          time: this.formatDate(a.created_at),
+        })),
+      };
+
+      this.setData({ projectInfo });
+
+      // 设置结项申请信息（如果有的话，通常从 project 字段映射或单独接口）
+      this.setData({
+        "closureInfo.summary": detail.summary || "",
+        "closureInfo.achievements": detail.achievements || "",
+        "closureInfo.impact": detail.impact || "",
+        "closureInfo.status": detail.status === "closed" ? "closed" : "",
+      });
     } catch (err) {
       console.error("加载项目信息失败:", err);
-      wx.showToast({
-        title: "加载失败",
-        icon: "none",
-      });
+      throw err;
+    }
+  },
+
+  // 日期格式化辅助函数 YYYY-MM-DD
+  formatDate(dateStr) {
+    if (!dateStr) return "";
+    // 如果是日期对象或ISO字符串，取前10位
+    if (typeof dateStr === "string") {
+      // 兼容 "2023-01-01T00:00:00.000Z" 和 "2023-01-01 00:00:00"
+      return dateStr.substring(0, 10);
+    }
+    try {
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    } catch (e) {
+      return dateStr;
     }
   },
 
   // 加载进度列表
   async loadProgressList() {
     try {
-      // 模拟数据
-      const mockProgressList = [
-        {
-          id: 1,
-          date: "2026-01-28",
-          title: "完成前期调研",
-          description: "完成了对当地农村的基本情况调研，收集了相关数据和资料",
-          author: "张三",
-          files: [
-            { name: "调研报告.pdf", type: "document", url: "" },
-            { name: "调研照片.jpg", type: "image", url: "" },
-          ],
-        },
-        {
-          id: 2,
-          date: "2026-01-25",
-          title: "制定实施计划",
-          description: "根据调研结果制定了详细的项目实施计划和时间安排",
-          author: "李四",
-          files: [],
-        },
-      ];
-
-      this.setData({ progressList: mockProgressList });
+      const res = await progressApi.getList({ projectId: this.data.projectId });
+      const list = (res.list || res || []).map((item) => ({
+        id: item.id,
+        date: this.formatDate(item.created_at),
+        title: item.title,
+        description: item.content || item.description,
+        author: item.creator_name || "成员",
+        files: (item.images || []).map((img) => ({
+          name: "图片",
+          type: "image",
+          url: img.url,
+        })),
+      }));
+      this.setData({ progressList: list });
     } catch (err) {
       console.error("加载进度列表失败:", err);
     }
@@ -193,82 +212,48 @@ Page({
   // 加载成果文件
   async loadResultFiles() {
     try {
-      // 模拟数据
-      const mockResultFiles = {
-        images: [
-          {
-            id: 1,
-            name: "活动照片1.jpg",
-            url: "https://via.placeholder.com/200x150",
-          },
-          {
-            id: 2,
-            name: "活动照片2.jpg",
-            url: "https://via.placeholder.com/200x150",
-          },
-        ],
-        documents: [
-          { id: 1, name: "项目总结报告.pdf", size: "2.3MB", url: "" },
-          { id: 2, name: "调研数据.xlsx", size: "1.5MB", url: "" },
-        ],
-        videos: [
-          { id: 1, name: "实践记录视频.mp4", duration: "05:30", url: "" },
-        ],
-      };
+      const res = await resultApi.getList({ projectId: this.data.projectId });
+      const results = res.list || res || [];
 
-      this.setData({ resultFiles: mockResultFiles });
+      const images = [];
+      const documents = [];
+      const videos = [];
+
+      results.forEach((item) => {
+        const file = {
+          id: item.id,
+          name: item.title,
+          url: item.url,
+          size: item.file_size ? this.formatFileSize(item.file_size) : "",
+        };
+
+        const ext = item.url.split(".").pop().toLowerCase();
+        if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
+          images.push(file);
+        } else if (["mp4", "mov", "avi"].includes(ext)) {
+          videos.push(file);
+        } else {
+          documents.push(file);
+        }
+      });
+
+      this.setData({
+        resultFiles: { images, documents, videos },
+        hasResultFiles:
+          images.length > 0 || documents.length > 0 || videos.length > 0,
+      });
     } catch (err) {
       console.error("加载成果文件失败:", err);
     }
   },
 
-  // 加载结项信息
-  async loadClosureInfo() {
+  // 加载评优信息
+  async loadEvaluationInfo() {
     try {
-      // 模拟数据
-      const mockClosureInfo = {
-        summary: "",
-        achievements: "",
-        impact: "",
-        status: "",
-        statusText: "",
-      };
-
-      this.setData({ closureInfo: mockClosureInfo });
-      this.updateSubmitStatus();
+      const info = await evaluationApi.getDetail(this.data.projectId);
+      this.setData({ evaluationInfo: info });
     } catch (err) {
-      console.error("加载结项信息失败:", err);
-    }
-  },
-
-  // 加载反馈列表
-  async loadFeedbackList() {
-    try {
-      // 模拟数据
-      const mockFeedbackList = [
-        {
-          id: 1,
-          author: "刘教授",
-          time: "2026-01-27 15:30",
-          type: "progress",
-          typeText: "进度反馈",
-          content: "调研工作做得很好，建议在实施阶段注意与当地居民的沟通方式。",
-          target: "完成前期调研",
-        },
-        {
-          id: 2,
-          author: "刘教授",
-          time: "2026-01-26 10:15",
-          type: "plan",
-          typeText: "计划反馈",
-          content: "实施计划比较详细，时间安排合理，可以考虑增加一些应急预案。",
-          target: "制定实施计划",
-        },
-      ];
-
-      this.setData({ feedbackList: mockFeedbackList });
-    } catch (err) {
-      console.error("加载反馈列表失败:", err);
+      console.error("加载评优信息失败:", err);
     }
   },
 
@@ -317,6 +302,13 @@ Page({
 
   // 显示添加进度弹窗
   showAddProgress() {
+    if (this.data.projectInfo.status === "closed") {
+      wx.showToast({
+        title: "项目已结项，不可添加进度",
+        icon: "none",
+      });
+      return;
+    }
     this.setData({
       showAddProgressModal: true,
       isEditing: false,
@@ -332,6 +324,7 @@ Page({
 
   // 编辑进度
   editProgress(e) {
+    if (this.data.projectInfo.status === "closed") return;
     const { item } = e.currentTarget.dataset;
     this.setData({
       showAddProgressModal: true,
@@ -413,53 +406,51 @@ Page({
     try {
       wx.showLoading({ title: isEditing ? "保存中..." : "提交中..." });
 
-      // const url = isEditing ? `/project/progress/${editingId}` : '/project/progress';
-      // const method = isEditing ? 'PUT' : 'POST';
-
-      // await request({
-      //   url,
-      //   method,
-      //   data: {
-      //     ...newProgress,
-      //     projectId: this.data.projectId
-      //   }
-      // });
-
-      // 模拟更新本地数据
-      if (isEditing) {
-        const progressList = this.data.progressList.map((item) => {
-          if (item.id === editingId) {
-            return {
-              ...item,
-              title: newProgress.title,
-              description: newProgress.description,
-              files: newProgress.files.map((file) => ({
-                name: file.name,
-                type: file.type || this.getFileType(file.name),
-                url: file.path || file.url,
-              })),
-            };
+      // 上传尚未上传的文件
+      const uploadedFiles = [];
+      for (const file of newProgress.files) {
+        if (
+          file.url &&
+          file.url.startsWith("http") &&
+          !file.url.includes("localhost")
+        ) {
+          // 已经是服务器上的文件（虽然预览时可能是 localhost，这里简单判断）
+          uploadedFiles.push(file);
+        } else {
+          // 需要上传
+          const isImage = this.getFileType(file.name) === "image";
+          if (isImage) {
+            const url = await uploadImage(file.path || file.url);
+            uploadedFiles.push({ name: file.name, url, type: "image" });
+          } else {
+            const res = await upload(file.path || file.url);
+            uploadedFiles.push({
+              name: file.name,
+              url: res.url,
+              type: res.type,
+            });
           }
-          return item;
-        });
-        this.setData({ progressList });
-      } else {
-        const newProgressItem = {
-          id: Date.now(),
-          date: new Date().toISOString().split("T")[0],
-          title: newProgress.title,
-          description: newProgress.description,
-          author: app.globalData.userInfo?.name || "当前用户",
-          files: newProgress.files.map((file) => ({
-            name: file.name,
-            type: this.getFileType(file.name),
-            url: file.path,
-          })),
-        };
-        this.setData({
-          progressList: [newProgressItem, ...this.data.progressList],
-        });
+        }
       }
+
+      const progressData = {
+        projectId: this.data.projectId,
+        title: newProgress.title,
+        content: newProgress.description,
+        images: uploadedFiles
+          .filter((f) => f.type === "image")
+          .map((f) => ({ url: f.url })),
+      };
+
+      if (isEditing) {
+        // 如果有更新进度的接口可以使用，目前 api.js 中只有 create
+        // 这里暂时只实现创建，或者如果后端支持 update 可以补充
+        // await progressApi.update(editingId, progressData);
+      } else {
+        await progressApi.create(progressData);
+      }
+
+      await this.loadProgressList();
 
       wx.hideLoading();
       wx.showToast({
@@ -501,84 +492,123 @@ Page({
   },
 
   // 选择图片
-  chooseImage() {
+  async chooseImage() {
+    if (this.data.projectInfo.status === "closed") return;
+
     wx.chooseImage({
       count: 9,
       sizeType: ["compressed"],
       sourceType: ["album", "camera"],
-      success: (res) => {
-        const images = res.tempFilePaths.map((path, index) => ({
-          id: Date.now() + index,
-          name: `图片${index + 1}.jpg`,
-          url: path,
-        }));
+      success: async (res) => {
+        try {
+          wx.showLoading({ title: "上传中..." });
+          const uploadPromises = res.tempFilePaths.map((path) =>
+            uploadImage(path),
+          );
+          const urls = await Promise.all(uploadPromises);
 
-        const currentImages = this.data.resultFiles.images;
-        this.setData({
-          "resultFiles.images": [...currentImages, ...images],
-        });
+          // 为每张图片创建一个成果记录
+          for (let i = 0; i < urls.length; i++) {
+            await resultApi.create({
+              projectId: this.data.projectId,
+              title: `图片成果_${Date.now()}_${i + 1}`,
+              category: "other",
+              images: [urls[i]],
+              status: "published",
+            });
+          }
 
-        this.hideUploadModal();
-        wx.showToast({
-          title: "上传成功",
-          icon: "success",
-        });
+          await this.loadResultFiles();
+          this.hideUploadModal();
+          wx.showToast({ title: "上传成功", icon: "success" });
+        } catch (err) {
+          console.error("Upload images error:", err);
+          wx.showToast({ title: "上传失败", icon: "none" });
+        } finally {
+          wx.hideLoading();
+        }
       },
     });
   },
 
   // 选择文档
-  chooseDocument() {
+  async chooseDocument() {
+    if (this.data.projectInfo.status === "closed") return;
+
     wx.chooseMessageFile({
       count: 10,
       type: "file",
       extension: ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"],
-      success: (res) => {
-        const documents = res.tempFiles.map((file, index) => ({
-          id: Date.now() + index,
-          name: file.name,
-          size: this.formatFileSize(file.size),
-          url: file.path,
-        }));
+      success: async (res) => {
+        try {
+          wx.showLoading({ title: "上传中..." });
+          for (const file of res.tempFiles) {
+            const uploadedFile = await upload(file.path);
+            await resultApi.create({
+              projectId: this.data.projectId,
+              title: file.name,
+              category: "report",
+              files: [
+                {
+                  name: file.name,
+                  url: uploadedFile.url,
+                  size: file.size,
+                  type: uploadedFile.type,
+                },
+              ],
+              status: "published",
+            });
+          }
 
-        const currentDocuments = this.data.resultFiles.documents;
-        this.setData({
-          "resultFiles.documents": [...currentDocuments, ...documents],
-        });
-
-        this.hideUploadModal();
-        wx.showToast({
-          title: "上传成功",
-          icon: "success",
-        });
+          await this.loadResultFiles();
+          this.hideUploadModal();
+          wx.showToast({ title: "上传成功", icon: "success" });
+        } catch (err) {
+          console.error("Upload documents error:", err);
+          wx.showToast({ title: "上传失败", icon: "none" });
+        } finally {
+          wx.hideLoading();
+        }
       },
     });
   },
 
   // 选择视频
-  chooseVideo() {
+  async chooseVideo() {
+    if (this.data.projectInfo.status === "closed") return;
+
     wx.chooseVideo({
       sourceType: ["album", "camera"],
       maxDuration: 60,
       camera: "back",
-      success: (res) => {
-        const video = {
-          id: Date.now(),
-          name: `视频${Date.now()}.mp4`,
-          duration: this.formatDuration(res.duration),
-          url: res.tempFilePath,
-        };
+      success: async (res) => {
+        try {
+          wx.showLoading({ title: "上传中..." });
+          const uploadedFile = await upload(res.tempFilePath);
+          await resultApi.create({
+            projectId: this.data.projectId,
+            title: `视频成果_${Date.now()}`,
+            category: "video",
+            files: [
+              {
+                name: `视频_${Date.now()}.mp4`,
+                url: uploadedFile.url,
+                size: res.size,
+                type: "video",
+              },
+            ],
+            status: "published",
+          });
 
-        const currentVideos = this.data.resultFiles.videos;
-        this.setData({
-          "resultFiles.videos": [...currentVideos, video],
-        });
-
-        this.hideUploadModal();
-        wx.showToast({
-          title: "上传成功",
-          icon: "success",
-        });
+          await this.loadResultFiles();
+          this.hideUploadModal();
+          wx.showToast({ title: "上传成功", icon: "success" });
+        } catch (err) {
+          console.error("Upload video error:", err);
+          wx.showToast({ title: "上传失败", icon: "none" });
+        } finally {
+          wx.hideLoading();
+        }
       },
     });
   },
@@ -646,24 +676,28 @@ Page({
 
   // 删除文件
   deleteFile(e) {
-    const id = e.currentTarget.dataset.id;
-    const type = e.currentTarget.dataset.type;
+    if (this.data.projectInfo.status === "closed") return;
 
+    const id = e.currentTarget.dataset.id;
     wx.showModal({
       title: "确认删除",
-      content: "确定要删除这个文件吗？",
-      success: (res) => {
+      content: "确定要删除这个成果文件吗？",
+      success: async (res) => {
         if (res.confirm) {
-          const files = this.data.resultFiles[type];
-          const newFiles = files.filter((item) => item.id !== id);
-          this.setData({
-            [`resultFiles.${type}`]: newFiles,
-          });
-
-          wx.showToast({
-            title: "删除成功",
-            icon: "success",
-          });
+          try {
+            await resultApi.delete(id);
+            await this.loadResultFiles();
+            wx.showToast({
+              title: "删除成功",
+              icon: "success",
+            });
+          } catch (err) {
+            console.error("Delete result error:", err);
+            wx.showToast({
+              title: "删除失败",
+              icon: "none",
+            });
+          }
         }
       },
     });
@@ -706,7 +740,17 @@ Page({
   },
 
   // 提交结项申请
-  submitClosure() {
+  async submitClosure() {
+    if (this.data.projectInfo.status === "closed") {
+      wx.showToast({ title: "项目已结项，不可重复提交", icon: "none" });
+      return;
+    }
+
+    if (this.data.projectInfo.userRole !== "leader") {
+      wx.showToast({ title: "只有负责人可以提交结项申请", icon: "none" });
+      return;
+    }
+
     const { summary, achievements, impact } = this.data.closureInfo;
 
     if (!summary.trim() || !achievements.trim() || !impact.trim()) {
@@ -720,34 +764,37 @@ Page({
     wx.showModal({
       title: "确认提交",
       content: "提交后将进入审核流程，确定要提交吗？",
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          wx.showLoading({
-            title: "提交中...",
-          });
-
-          // 这里应该调用API提交结项申请
-          setTimeout(() => {
-            wx.hideLoading();
-            this.setData({
-              "closureInfo.status": "submitted",
-              "closureInfo.statusText": "已提交，待导师确认",
+          try {
+            wx.showLoading({
+              title: "提交中...",
             });
-            this.updateSubmitStatus();
 
+            await projectApi.update(this.data.projectId, {
+              summary,
+              achievements,
+              impact,
+              // status: 'pending_closure' // 如果有特定的结项中状态，可以在此设置
+            });
+
+            await this.loadProjectInfo();
+
+            wx.hideLoading();
             wx.showToast({
               title: "提交成功",
               icon: "success",
             });
-          }, 1500);
+          } catch (err) {
+            console.error("Submit closure error:", err);
+            wx.hideLoading();
+            wx.showToast({
+              title: "提交失败",
+              icon: "none",
+            });
+          }
         }
       },
     });
-  },
-
-  // 计算是否有成果文件
-  get hasResultFiles() {
-    const { images, documents, videos } = this.data.resultFiles;
-    return images.length > 0 || documents.length > 0 || videos.length > 0;
   },
 });

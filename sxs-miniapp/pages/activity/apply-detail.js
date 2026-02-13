@@ -34,7 +34,6 @@ Page({
       expectedResult: "",
     },
     detail: null,
-    resultCount: 0,
     canSubmitResult: false,
     canUploadProgress: false,
     canCloseProject: false,
@@ -95,6 +94,16 @@ Page({
       const userInfo = await userApi.getInfo();
       const teachers = await userApi.getTeachers(userInfo.collegeId);
       this.setData({ teacherOptions: teachers });
+
+      // 如果是 view/edit 模式，且详情已加载，更新索引
+      if (this.data.detail && this.data.detail.teacher_id) {
+        const teacherIndex = teachers.findIndex(
+          (t) => t.id === this.data.detail.teacher_id,
+        );
+        if (teacherIndex >= 0) {
+          this.setData({ "form.teacherIndex": teacherIndex });
+        }
+      }
     } catch (err) {
       console.error("加载教师列表失败:", err);
       // 如果获取失败，设置为空数组
@@ -115,7 +124,20 @@ Page({
         approved: "审核通过",
         closed: "已结项",
         rejected: "已驳回",
+        withdrawn: "已撤回",
       };
+      const membersArray = res.members || [];
+      const membersText = membersArray
+        .filter((m) => m.role === "member")
+        .map((m) => {
+          const parts = [m.name];
+          if (m.student_id || m.username)
+            parts.push(m.student_id || m.username);
+          if (m.phone) parts.push(m.phone);
+          return parts.join("-");
+        })
+        .join("\n");
+
       const detail = {
         ...res,
         startDate: res.start_date ? res.start_date.slice(0, 10) : "",
@@ -134,46 +156,36 @@ Page({
         teacherId: res.teacher_id,
         teacher: res.teacher_name,
         description: res.description,
-        // 团队成员从members数组中提取姓名
-        members:
-          res.members && res.members.length > 0
-            ? res.members
-                .filter((m) => m.role === "member")
-                .map((m) => m.name)
-                .join("、")
-            : "",
+        members: membersArray,
+        membersText: membersText,
         // 这些字段在数据库中可能不存在，使用默认值
         plan: res.plan || "",
         expectedResult: res.expected_result || "",
       };
 
       debug.log("处理后的详情数据:", detail);
-      debug.formData(detail, "设置到表单的数据");
 
-      this.setData({ form: detail, detail });
+      // form中的members需要是字符串，供编辑使用
+      const formData = {
+        ...detail,
+        members: membersText,
+      };
+
+      this.setData({ form: formData, detail });
+
+      // 设置教师回显索引
+      if (res.teacher_id && this.data.teacherOptions.length > 0) {
+        const teacherIndex = this.data.teacherOptions.findIndex(
+          (t) => t.id === res.teacher_id,
+        );
+        if (teacherIndex >= 0) {
+          this.setData({ "form.teacherIndex": teacherIndex });
+        }
+      }
 
       // 验证日期字段是否正确设置
-      debug.log("表单日期字段 - 开始日期:", this.data.form.startDate);
-      debug.log("表单日期字段 - 结束日期:", this.data.form.endDate);
-
-      // 加载该项目成果数量（我的成果）
-      this.loadResultCount(id);
     } catch (err) {
       console.error("加载项目详情失败:", err);
-    }
-  },
-
-  async loadResultCount(projectId) {
-    try {
-      const res = await resultApi.getMyList({
-        page: 1,
-        pageSize: 1,
-        projectId,
-      });
-      this.setData({ resultCount: Number(res.total) || 0 });
-    } catch (err) {
-      console.error("加载成果数量失败:", err);
-      this.setData({ resultCount: 0 });
     }
   },
 
@@ -190,7 +202,21 @@ Page({
     const index = e.detail.value;
     this.setData({
       "form.theme": this.data.themeOptions[index],
+      "form.themeIndex": index,
     });
+  },
+
+  // 教师选择
+  onTeacherChange(e) {
+    const index = e.detail.value;
+    const teacher = this.data.teacherOptions[index];
+    if (teacher) {
+      this.setData({
+        "form.teacher": teacher.name,
+        "form.teacherId": teacher.id,
+        "form.teacherIndex": index,
+      });
+    }
   },
 
   // 开始日期
@@ -262,6 +288,8 @@ Page({
               endDate: form.endDate,
               budget: parseFloat(form.budget) || 0,
               teacherId: form.teacherId || null,
+              teacherName: form.teacher,
+              leaderPhone: form.phone,
               members: form.members,
               plan: form.plan,
               expected_result: form.expectedResult,
@@ -322,20 +350,6 @@ Page({
     });
   },
 
-  goToResultList() {
-    const { id } = this.data;
-    if (!id) {
-      wx.showToast({ title: "项目ID不能为空", icon: "none" });
-      return;
-    }
-    const title = (this.data.detail && this.data.detail.title) || "";
-    wx.navigateTo({
-      url: `/pages/result/project?projectId=${id}&title=${encodeURIComponent(
-        title,
-      )}`,
-    });
-  },
-
   // 进入编辑模式
   goToEdit() {
     const { id } = this.data;
@@ -365,6 +379,22 @@ Page({
 
     wx.navigateTo({
       url: `/pages/progress/detail?mode=create&projectId=${id}`,
+    });
+  },
+
+  // 撤销申请
+  revokeProject() {
+    wx.showModal({
+      title: "撤销申请",
+      content: "确定要撤销该项目的审批申请吗？撤销后您可以重新修改并提交。",
+      success: (res) => {
+        if (res.confirm) {
+          projectApi.revoke(this.data.id).then(() => {
+            wx.showToast({ title: "已撤销" });
+            this.loadDetail(this.data.id);
+          });
+        }
+      },
     });
   },
 

@@ -26,26 +26,34 @@ router.get(
       // 根据角色确定审批范围
       if (role === "college_admin") {
         // 学院管理员：只能审批本学院待学院审核的项目
-        const [[user]] = await db.query(
+        const [users] = await db.query(
           "SELECT college_id FROM sys_user WHERE id = ?",
           [userId],
         );
+        if (users.length === 0) {
+          return error(res, "用户不存在", 404);
+        }
+        const user = users[0];
         whereClauses.push("p.college_id = ?");
         params.push(user.college_id);
 
         if (status === "pending") {
           whereClauses.push("p.status = 'pending'");
-        } else if (status === "approved") {
-          whereClauses.push("p.status = 'college_approved'");
+        } else if (status === "college_approved" || status === "approved") {
+          whereClauses.push(
+            "p.status IN ('college_approved', 'school_approved', 'approved', 'closed')",
+          );
         } else if (status === "rejected") {
           whereClauses.push("p.status = 'rejected'");
         }
       } else if (role === "school_admin") {
         // 校级管理员：只能审批待校级审核的项目
-        if (status === "pending") {
+        if (status === "pending" || status === "college_approved") {
           whereClauses.push("p.status = 'college_approved'");
-        } else if (status === "approved") {
-          whereClauses.push("p.status = 'approved'");
+        } else if (status === "school_approved" || status === "approved") {
+          whereClauses.push(
+            "p.status IN ('school_approved', 'approved', 'closed')",
+          );
         } else if (status === "rejected") {
           whereClauses.push("p.status = 'rejected'");
         }

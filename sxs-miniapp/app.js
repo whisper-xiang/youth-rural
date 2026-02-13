@@ -58,13 +58,7 @@ App({
       "progress.view": ["student", "teacher", "college_admin", "school_admin"],
       // 成果管理
       "result.submit": ["student"],
-      "result.view": [
-        "student",
-        "teacher",
-        "college_admin",
-        "school_admin",
-        "expert",
-      ],
+      "result.view": ["student", "teacher", "college_admin", "school_admin"],
       // 评优管理
       "evaluate.score": ["expert"],
       "evaluate.manage": ["school_admin"],
@@ -88,18 +82,18 @@ App({
 
     const allModules = [
       {
-        key: "apply",
-        name: "项目管理",
-        desc: "管理和跟踪项目进度",
-        url: "/pages/activity/apply-list",
-        icon: "icon-apply",
-      },
-      {
         key: "create",
         name: "项目申报",
-        desc: "发起新的项目申请",
+        desc: "发起新的社会实践项目申请",
         url: "/pages/activity/apply-detail?mode=create",
         icon: "icon-create",
+      },
+      {
+        key: "apply",
+        name: "我的项目",
+        desc: "跟踪申报进度与项目管理",
+        url: "/pages/activity/apply-list",
+        icon: "icon-apply",
       },
       {
         key: "approve",
@@ -110,46 +104,47 @@ App({
       },
       {
         key: "result",
-        name: "我的成果",
-        desc: "提交和浏览活动成果",
+        name: "成果汇总",
+        desc: "查阅和管理活动实践成果",
         url: "/pages/result/list",
         icon: "icon-result",
       },
       {
         key: "evaluate",
-        name: "评优管理",
-        desc: "项目评审与打分",
+        name: "项目评审",
+        desc: "对申报项目进行打分与评价",
         url: "/pages/evaluate/list",
         icon: "icon-evaluate",
       },
       {
         key: "ranking",
-        name: "评优结果",
-        desc: "查看项目获奖名单",
+        name: "评优榜单",
+        desc: "查看优秀项目公示结果",
         url: "/pages/evaluate/ranking",
         icon: "icon-ranking",
       },
       {
         key: "notice",
-        name: "消息通知",
-        desc: "查看最新通知",
+        name: "消息公告",
+        desc: "查阅系统通知与活动资讯",
         url: "/pages/notice/list",
         icon: "icon-notice",
+      },
+      {
+        key: "notice_manage",
+        name: "通知发布",
+        desc: "发布和管理系统公告",
+        url: "/pages/notice/create",
+        icon: "icon-notice-manage",
       },
     ];
 
     const roleModules = {
-      student: ["create", "apply", "result", "ranking"],
-      teacher: ["apply", "result", "ranking"],
-      college_admin: ["apply", "approve", "result", "ranking"],
-      school_admin: [
-        "apply",
-        "approve",
-        "result",
-        "evaluate",
-        "ranking",
-      ],
-      expert: ["result", "evaluate", "ranking"],
+      student: ["create", "apply", "notice", "ranking"],
+      teacher: ["apply", "result", "notice", "ranking"],
+      college_admin: ["approve", "notice_manage", "ranking"],
+      school_admin: ["approve", "evaluate", "notice_manage", "ranking"],
+      expert: ["evaluate", "notice", "ranking"],
     };
 
     const allowedKeys = roleModules[role] || [];

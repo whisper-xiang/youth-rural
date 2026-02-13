@@ -7,10 +7,10 @@ Page({
     // 测试账号对应关系
     testAccounts: {
       student: { username: "2021001", password: "123456" },
-      teacher: { username: "T001", password: "123456" },
-      college_admin: { username: "CA001", password: "123456" },
+      teacher: { username: "t_wang", password: "123456" },
+      college_admin: { username: "ca_jg", password: "123456" },
       school_admin: { username: "admin", password: "123456" },
-      expert: { username: "E001", password: "123456" },
+      expert: { username: "e_chen", password: "123456" },
     },
     loading: false,
   },

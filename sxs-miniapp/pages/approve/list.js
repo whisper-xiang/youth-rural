@@ -15,16 +15,15 @@ Page({
 
   onLoad() {
     const app = getApp();
-    const userInfo = app.getUserInfo();
+    const userInfo = app.globalData.userInfo;
     if (userInfo) {
       this.setData({ userRole: userInfo.role });
     }
-    this.loadList(true);
   },
 
   onShow() {
     const app = getApp();
-    const userInfo = app.getUserInfo();
+    const userInfo = app.globalData.userInfo;
     if (userInfo) {
       this.setData({ userRole: userInfo.role });
     }
@@ -63,6 +62,7 @@ Page({
         approved: "审核通过",
         rejected: "已驳回",
         closed: "已结项",
+        withdrawn: "已撤回",
       };
 
       const newList = res.list.map((item) => ({
