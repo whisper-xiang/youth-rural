@@ -66,7 +66,7 @@ router.get(
       console.error("Get evaluation list error:", err);
       error(res, "获取评优列表失败", 500);
     }
-  }
+  },
 );
 
 // 获取评优项目详情
@@ -84,7 +84,7 @@ router.get("/detail/:projectId", verifyToken, async (req, res) => {
        LEFT JOIN sys_user u ON p.leader_id = u.id
        LEFT JOIN sys_college c ON p.college_id = c.id
        WHERE p.id = ?`,
-      [projectId]
+      [projectId],
     );
 
     if (!project) {
@@ -95,13 +95,13 @@ router.get("/detail/:projectId", verifyToken, async (req, res) => {
     const [results] = await db.query(
       `SELECT id, title, category, cover_url, created_at
        FROM result WHERE project_id = ? AND status = 'published'`,
-      [projectId]
+      [projectId],
     );
 
     // 我的评分
     const [[myScore]] = await db.query(
       "SELECT * FROM evaluation_score WHERE project_id = ? AND expert_id = ?",
-      [projectId, userId]
+      [projectId, userId],
     );
 
     success(res, {
@@ -136,7 +136,7 @@ router.post(
       // 检查是否已评分
       const [[existing]] = await db.query(
         "SELECT id FROM evaluation_score WHERE project_id = ? AND expert_id = ?",
-        [projectId, userId]
+        [projectId, userId],
       );
 
       // 计算总分 (权重: 创新30%, 实践30%, 成效25%, 报告15%)
@@ -150,7 +150,7 @@ router.post(
       // 获取当前评优活动ID
       const [[ep]] = await db.query(
         "SELECT evaluation_id FROM evaluation_project WHERE project_id = ?",
-        [projectId]
+        [projectId],
       );
 
       if (existing) {
@@ -169,7 +169,7 @@ router.post(
             comment,
             projectId,
             userId,
-          ]
+          ],
         );
       } else {
         // 新增评分
@@ -187,23 +187,23 @@ router.post(
             scoreReport,
             totalScore,
             comment,
-          ]
+          ],
         );
       }
 
       // 更新项目平均分
       const [[avgScore]] = await db.query(
         "SELECT AVG(total_score) as avg_score FROM evaluation_score WHERE project_id = ?",
-        [projectId]
+        [projectId],
       );
       await db.query(
         "UPDATE evaluation_project SET final_score = ? WHERE project_id = ?",
-        [avgScore.avg_score, projectId]
+        [avgScore.avg_score, projectId],
       );
 
       const [[projectInfo]] = await db.query(
         "SELECT id, title FROM project WHERE id = ?",
-        [projectId]
+        [projectId],
       );
       await safeCreateNotice({
         publisherId: userId,
@@ -221,20 +221,28 @@ router.post(
       console.error("Submit score error:", err);
       error(res, "评分失败", 500);
     }
-  }
+  },
 );
 
-// 获取评优结果排名（管理员）
-router.get(
-  "/ranking",
-  verifyToken,
-  checkRole("school_admin"),
-  async (req, res) => {
-    try {
-      const { evaluationId } = req.query;
+// 获取评优结果排名（所有角色可见）
+router.get("/ranking", verifyToken, async (req, res) => {
+  try {
+    let { evaluationId } = req.query;
 
-      const [rows] = await db.query(
-        `SELECT ep.*, p.title, p.category,
+    // 如果未提供 evaluationId，则获取最近一次评优活动的 ID
+    if (!evaluationId) {
+      const [[latest]] = await db.query(
+        "SELECT id FROM evaluation ORDER BY created_at DESC LIMIT 1",
+      );
+      if (latest) {
+        evaluationId = latest.id;
+      } else {
+        return success(res, []); // 没有评优活动
+      }
+    }
+
+    const [rows] = await db.query(
+      `SELECT ep.*, p.title, p.category,
               u.real_name as leader_name,
               c.name as college_name,
               (SELECT COUNT(*) FROM evaluation_score WHERE project_id = ep.project_id) as score_count
@@ -244,16 +252,15 @@ router.get(
        LEFT JOIN sys_college c ON p.college_id = c.id
        WHERE ep.evaluation_id = ?
        ORDER BY ep.final_score DESC`,
-        [evaluationId]
-      );
+      [evaluationId],
+    );
 
-      success(res, rows);
-    } catch (err) {
-      console.error("Get ranking error:", err);
-      error(res, "获取排名失败", 500);
-    }
+    success(res, rows);
+  } catch (err) {
+    console.error("Get ranking error:", err);
+    error(res, "获取排名失败", 500);
   }
-);
+});
 
 // 设置获奖等级
 router.post(
@@ -267,7 +274,7 @@ router.post(
 
       await db.query(
         "UPDATE evaluation_project SET award_level = ? WHERE project_id = ?",
-        [awardLevel, projectId]
+        [awardLevel, projectId],
       );
 
       // 更新项目为优秀项目
@@ -279,7 +286,7 @@ router.post(
 
       const [[projectInfo]] = await db.query(
         "SELECT id, title FROM project WHERE id = ?",
-        [projectId]
+        [projectId],
       );
       await safeCreateNotice({
         publisherId: req.user.id,
@@ -303,7 +310,7 @@ router.post(
       console.error("Set award error:", err);
       error(res, "设置失败", 500);
     }
-  }
+  },
 );
 
 module.exports = router;

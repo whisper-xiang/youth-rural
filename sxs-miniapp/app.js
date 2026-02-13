@@ -85,13 +85,21 @@ App({
   // 获取角色对应的首页模块
   getRoleModules() {
     const role = this.globalData.role;
+
     const allModules = [
       {
         key: "apply",
         name: "项目管理",
-        desc: "创建和管理申报项目",
+        desc: "管理和跟踪项目进度",
         url: "/pages/activity/apply-list",
         icon: "icon-apply",
+      },
+      {
+        key: "create",
+        name: "项目申报",
+        desc: "发起新的项目申请",
+        url: "/pages/activity/apply-detail?mode=create",
+        icon: "icon-create",
       },
       {
         key: "approve",
@@ -101,15 +109,8 @@ App({
         icon: "icon-approve",
       },
       {
-        key: "progress",
-        name: "进度跟踪",
-        desc: "上传和查看活动进展",
-        url: "/pages/progress/list",
-        icon: "icon-progress",
-      },
-      {
         key: "result",
-        name: "成果管理",
+        name: "我的成果",
         desc: "提交和浏览活动成果",
         url: "/pages/result/list",
         icon: "icon-result",
@@ -122,8 +123,15 @@ App({
         icon: "icon-evaluate",
       },
       {
+        key: "ranking",
+        name: "评优结果",
+        desc: "查看项目获奖名单",
+        url: "/pages/evaluate/ranking",
+        icon: "icon-ranking",
+      },
+      {
         key: "notice",
-        name: "通知公告",
+        name: "消息通知",
         desc: "查看最新通知",
         url: "/pages/notice/list",
         icon: "icon-notice",
@@ -131,18 +139,17 @@ App({
     ];
 
     const roleModules = {
-      student: ["apply", "progress", "result", "notice"],
-      teacher: ["apply", "progress", "result", "notice"],
-      college_admin: ["apply", "approve", "progress", "result", "notice"],
+      student: ["create", "apply", "result", "ranking"],
+      teacher: ["apply", "result", "ranking"],
+      college_admin: ["apply", "approve", "result", "ranking"],
       school_admin: [
         "apply",
         "approve",
-        "progress",
         "result",
         "evaluate",
-        "notice",
+        "ranking",
       ],
-      expert: ["result", "evaluate", "notice"],
+      expert: ["result", "evaluate", "ranking"],
     };
 
     const allowedKeys = roleModules[role] || [];

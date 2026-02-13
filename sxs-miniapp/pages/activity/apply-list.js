@@ -17,6 +17,7 @@ Page({
       app.hasPermission &&
       app.hasPermission("apply.create")
     );
+
     this.setData({ canCreate });
     this.loadList(true);
   },
@@ -57,7 +58,6 @@ Page({
       });
 
       const statusMap = {
-        draft: "草稿",
         pending: "待学院审核",
         college_approved: "待校级审核",
         school_approved: "审核通过",
@@ -95,8 +95,18 @@ Page({
   // 查看详情
   goDetail(e) {
     const id = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/activity/apply-detail?id=${id}&mode=view`,
-    });
+    const status = e.currentTarget.dataset.status;
+
+    // 如果项目已立项（approved / school_approved / closed），进入工作台
+    if (["approved", "school_approved", "closed"].includes(status)) {
+      wx.navigateTo({
+        url: `/pages/project/workspace?id=${id}`,
+      });
+    } else {
+      // 否则进入申请详情页（查看审核状态或重新编辑提交）
+      wx.navigateTo({
+        url: `/pages/activity/apply-detail?id=${id}&mode=view`,
+      });
+    }
   },
 });

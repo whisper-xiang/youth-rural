@@ -5,17 +5,10 @@ const { userApi } = require("../../utils/api");
 Page({
   data: {
     isLogin: false,
-    userInfo: {
-      name: "",
-      roleName: "",
-      avatarText: "",
-    },
+    isStudent: false,
     modules: [],
-    stats: {
-      projectCount: 0,
-      pendingCount: 0,
-      noticeCount: 0,
-    },
+    projects: [], // 学生端项目列表
+    showProcessModal: false, // 控制流程弹窗显示
   },
 
   onLoad() {
@@ -28,56 +21,53 @@ Page({
 
   // 检查登录状态并加载模块
   checkLogin() {
-    const isLogin = app.globalData.isLogin;
-    if (isLogin) {
-      const userInfo = app.globalData.userInfo;
+    const app = getApp();
+    console.log("checkLogin被调用, app.globalData:", app.globalData);
+
+    if (app && app.globalData && app.globalData.isLogin) {
+      const isStudent = app.globalData.role === "student";
+
+      console.log("用户已登录, isStudent:", isStudent);
+
       const modules = app.getRoleModules();
       this.setData({
         isLogin: true,
-        userInfo: {
-          name: userInfo.name,
-          roleName: userInfo.roleName,
-          avatarText: userInfo.name.slice(0, 1),
-        },
+        isStudent,
         modules,
       });
-      // 加载统计数据
-      this.loadStats();
     } else {
+      console.log("用户未登录");
       this.setData({
         isLogin: false,
-        userInfo: { name: "", roleName: "", avatarText: "" },
+        isStudent: false,
         modules: [],
-        stats: { projectCount: 0, pendingCount: 0, noticeCount: 0 },
+        projects: [],
       });
-    }
-  },
-
-  // 加载统计数据
-  async loadStats() {
-    try {
-      const stats = await userApi.getStats();
-      this.setData({ stats });
-    } catch (err) {
-      console.error("获取统计数据失败:", err);
     }
   },
 
   // 跳转登录
   goLogin() {
-    wx.navigateTo({ url: "/pages/auth/login" });
-  },
+    console.log("goLogin被调用");
+    const app = getApp();
 
-  // 切换身份
-  switchRole() {
-    wx.showModal({
-      title: "切换身份",
-      content: "确定要切换到其他身份吗？",
-      success: (res) => {
-        if (res.confirm) {
-          app.logout();
-          wx.navigateTo({ url: "/pages/auth/login" });
-        }
+    // 如果已登录，先退出登录再跳转
+    if (app.globalData && app.globalData.isLogin) {
+      console.log("用户已登录，先退出登录");
+      app.logout();
+    }
+
+    wx.navigateTo({
+      url: "/pages/auth/login?force=1",
+      success: () => {
+        console.log("登录页面跳转成功");
+      },
+      fail: (err) => {
+        console.error("登录页面跳转失败:", err);
+        wx.showToast({
+          title: "页面跳转失败",
+          icon: "none",
+        });
       },
     });
   },
@@ -94,7 +84,7 @@ Page({
     const tabBarPages = [
       "/pages/index/index",
       "/pages/activity/apply-list",
-      "/pages/progress/list",
+      "/pages/notice/list",
       "/pages/profile/index",
     ];
     if (tabBarPages.includes(url)) {
@@ -104,66 +94,44 @@ Page({
     }
   },
 
-  // 跳转到统计页面
-  goToStats(e) {
-    if (!this.data.isLogin) {
-      wx.navigateTo({ url: "/pages/auth/login" });
-      return;
-    }
+  // 跳转到项目详情/工作台
+  goToProject(e) {
+    const projectId = e.currentTarget.dataset.id;
+    // 从数据中查找对应的项目状态
+    const project = this.data.projects.find((p) => p.id === projectId);
+    const status = project ? project.status : "";
 
-    const type = e.currentTarget.dataset.type;
-    const role = app.globalData.role;
-    let url = "";
-
-    switch (type) {
-      case "project":
-        // 根据角色跳转到不同的项目页面
-        if (role === "student" || role === "teacher") {
-          url = "/pages/activity/apply-list";
-        } else if (role === "college_admin" || role === "school_admin") {
-          url = "/pages/approve/list";
-        } else {
-          url = "/pages/activity/apply-list";
-        }
-        break;
-
-      case "pending":
-        // 根据角色跳转到待处理页面
-        if (role === "college_admin") {
-          url = "/pages/approve/list";
-        } else if (role === "school_admin") {
-          url = "/pages/approve/list";
-        } else if (role === "teacher") {
-          url = "/pages/progress/list";
-        } else if (role === "expert") {
-          url = "/pages/evaluate/list";
-        } else {
-          url = "/pages/activity/apply-list";
-        }
-        break;
-
-      case "notice":
-        // 通知页面
-        url = "/pages/notice/list";
-        break;
-
-      default:
-        url = "/pages/activity/apply-list";
-        break;
-    }
-
-    // tabBar 页面用 switchTab，其他用 navigateTo
-    const tabBarPages = [
-      "/pages/index/index",
-      "/pages/activity/apply-list",
-      "/pages/progress/list",
-      "/pages/profile/index",
-    ];
-
-    if (tabBarPages.includes(url)) {
-      wx.switchTab({ url });
+    // 如果项目已立项（APPROVED / CLOSED 等），进入工作台
+    if (["APPROVED", "CLOSED"].includes(status)) {
+      wx.navigateTo({
+        url: `/pages/project/workspace?id=${projectId}`,
+      });
     } else {
-      wx.navigateTo({ url });
+      // 否则进入申请详情页
+      wx.navigateTo({
+        url: `/pages/activity/apply-detail?id=${projectId}&mode=view`,
+      });
     }
+  },
+
+  // 跳转到申报页面
+  goToApply() {
+    wx.navigateTo({
+      url: "/pages/activity/apply-detail?mode=create",
+    });
+  },
+
+  // 显示流程指引
+  showProcessGuide() {
+    this.setData({
+      showProcessModal: true,
+    });
+  },
+
+  // 隐藏流程指引
+  hideProcessGuide() {
+    this.setData({
+      showProcessModal: false,
+    });
   },
 });

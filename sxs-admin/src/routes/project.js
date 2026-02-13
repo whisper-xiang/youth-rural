@@ -29,7 +29,7 @@ router.get("/list", verifyToken, async (req, res) => {
     } else if (role === "college_admin") {
       const [[user]] = await db.query(
         "SELECT college_id FROM sys_user WHERE id = ?",
-        [userId]
+        [userId],
       );
       whereClauses.push("p.college_id = ?");
       params.push(user.college_id);
@@ -58,7 +58,7 @@ router.get("/list", verifyToken, async (req, res) => {
     // 查询总数
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) as total FROM project p WHERE ${whereSQL}`,
-      params
+      params,
     );
 
     // 查询列表
@@ -76,7 +76,7 @@ router.get("/list", verifyToken, async (req, res) => {
        WHERE ${whereSQL}
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`,
-      [userId, ...params, parseInt(pageSize), offset]
+      [userId, ...params, parseInt(pageSize), offset],
     );
 
     paginate(res, rows, total, page, pageSize);
@@ -102,7 +102,7 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
        LEFT JOIN sys_user t ON p.teacher_id = t.id
        LEFT JOIN sys_college c ON p.college_id = c.id
        WHERE p.id = ?`,
-      [id]
+      [id],
     );
 
     if (!project) {
@@ -115,13 +115,22 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
        FROM project_member pm
        LEFT JOIN sys_user u ON pm.user_id = u.id
        WHERE pm.project_id = ?`,
-      [id]
+      [id],
     );
 
     // 附件
     const [attachments] = await db.query(
       "SELECT * FROM project_attachment WHERE project_id = ?",
-      [id]
+      [id],
+    );
+
+    // 评优信息
+    const [[evaluation]] = await db.query(
+      `SELECT ep.*, e.title as evaluation_title 
+       FROM evaluation_project ep 
+       LEFT JOIN evaluation e ON ep.evaluation_id = e.id
+       WHERE ep.project_id = ?`,
+      [id],
     );
 
     // 审批记录
@@ -131,13 +140,14 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
        LEFT JOIN sys_user u ON ar.approver_id = u.id
        WHERE ar.project_id = ?
        ORDER BY ar.created_at`,
-      [id]
+      [id],
     );
 
     success(res, {
       ...project,
       members,
       attachments,
+      evaluation: evaluation || null,
       approvals,
     });
   } catch (err) {
@@ -161,7 +171,7 @@ router.post(
 
       const [[project]] = await conn.query(
         "SELECT id, title, status, teacher_id FROM project WHERE id = ?",
-        [id]
+        [id],
       );
       if (!project) {
         await conn.rollback();
@@ -181,7 +191,7 @@ router.post(
       // 确定当前评优活动（进行中），没有则创建本年度一条
       let evaluationId;
       const [[ongoing]] = await conn.query(
-        "SELECT id FROM evaluation WHERE status = 'ongoing' ORDER BY year DESC, id DESC LIMIT 1"
+        "SELECT id FROM evaluation WHERE status = 'ongoing' ORDER BY year DESC, id DESC LIMIT 1",
       );
 
       if (ongoing && ongoing.id) {
@@ -190,7 +200,7 @@ router.post(
         const year = new Date().getFullYear();
         const [createEvalRes] = await conn.query(
           "INSERT INTO evaluation (title, year, description, start_time, status) VALUES (?, ?, ?, NOW(), 'ongoing')",
-          [`${year}年度三下乡评优`, year, "项目结项后自动进入评优"]
+          [`${year}年度三下乡评优`, year, "项目结项后自动进入评优"],
         );
         evaluationId = createEvalRes.insertId;
       }
@@ -204,7 +214,7 @@ router.post(
       // 加入评优项目池（已存在则忽略）
       await conn.query(
         "INSERT IGNORE INTO evaluation_project (evaluation_id, project_id, is_top) VALUES (?, ?, 0)",
-        [evaluationId, id]
+        [evaluationId, id],
       );
 
       await safeCreateNotice({
@@ -226,7 +236,7 @@ router.post(
     } finally {
       conn.release();
     }
-  }
+  },
 );
 
 // 创建项目
@@ -254,18 +264,18 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
     // 获取用户学院
     const [[user]] = await conn.query(
       "SELECT college_id FROM sys_user WHERE id = ?",
-      [userId]
+      [userId],
     );
 
     // 生成项目编号
     const projectNo = `SXS${new Date().getFullYear()}${String(Date.now()).slice(
-      -6
+      -6,
     )}`;
 
     // 创建项目
     const [result] = await conn.query(
       `INSERT INTO project (project_no, title, category, description, target_area, start_date, end_date, budget, leader_id, teacher_id, college_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
       [
         projectNo,
         title,
@@ -278,7 +288,7 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
         userId,
         processedTeacherId,
         user.college_id,
-      ]
+      ],
     );
 
     const projectId = result.insertId;
@@ -286,7 +296,7 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
     // 添加负责人为成员
     await conn.query(
       `INSERT INTO project_member (project_id, user_id, role) VALUES (?, ?, 'leader')`,
-      [projectId, userId]
+      [projectId, userId],
     );
 
     // 添加其他成员
@@ -294,29 +304,30 @@ router.post("/create", verifyToken, checkRole("student"), async (req, res) => {
       for (const member of members) {
         await conn.query(
           `INSERT INTO project_member (project_id, user_id, role, responsibility) VALUES (?, ?, 'member', ?)`,
-          [projectId, member.userId, member.responsibility]
+          [projectId, member.userId, member.responsibility],
         );
       }
     }
 
-    await conn.commit();
-
+    // 创建通知
     await safeCreateNotice({
+      conn,
       publisherId: userId,
       type: "activity",
-      title: `创建项目：${title}`,
-      summary: "学生创建了新的项目草稿",
-      content: `学生创建项目「${title}」，当前状态为草稿，可继续完善并提交审批。`,
+      title: `提交审批：${title}`,
+      summary: "项目已提交，进入审核流程",
+      content: `项目「${title}」已由学生提交审批，状态变更为待审核。`,
       source: "项目管理",
     });
 
-    success(res, { id: projectId, projectNo }, "创建成功");
+    await conn.commit();
+    success(res, { id: projectId }, "申报提交成功");
   } catch (err) {
-    await conn.rollback();
+    if (conn) await conn.rollback();
     console.error("Create project error:", err);
-    error(res, "创建项目失败", 500);
+    error(res, "申报提交失败", 500);
   } finally {
-    conn.release();
+    if (conn) conn.release();
   }
 });
 
@@ -348,7 +359,7 @@ router.put("/update/:id", verifyToken, async (req, res) => {
     if (project.leader_id !== req.user.id && req.user.role !== "school_admin") {
       return error(res, "无权限修改");
     }
-    if (!["draft", "rejected"].includes(project.status)) {
+    if (project.status !== "rejected" && req.user.role !== "school_admin") {
       return error(res, "当前状态不允许修改");
     }
 
@@ -366,7 +377,7 @@ router.put("/update/:id", verifyToken, async (req, res) => {
         budget,
         processedTeacherId,
         id,
-      ]
+      ],
     );
 
     await safeCreateNotice({
@@ -399,7 +410,7 @@ router.post("/submit/:id", verifyToken, async (req, res) => {
     if (project.leader_id !== req.user.id) {
       return error(res, "无权限操作");
     }
-    if (!["draft", "rejected"].includes(project.status)) {
+    if (!["rejected"].includes(project.status)) {
       return error(res, "当前状态不允许提交");
     }
 
@@ -438,8 +449,8 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
     if (project.leader_id !== req.user.id && req.user.role !== "school_admin") {
       return error(res, "无权限删除");
     }
-    if (project.status !== "draft") {
-      return error(res, "只能删除草稿状态的项目");
+    if (project.status !== "rejected") {
+      return error(res, "只能删除已驳回的项目");
     }
 
     await db.query("DELETE FROM project WHERE id = ?", [id]);
@@ -450,8 +461,8 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
       publisherId: req.user.id,
       type: "activity",
       title: `删除项目：${project.title}`,
-      summary: "项目草稿已删除",
-      content: `用户删除了草稿项目「${project.title}」。`,
+      summary: "申报项目已删除",
+      content: `用户删除了申报项目「${project.title}」。`,
       source: "项目管理",
     });
 

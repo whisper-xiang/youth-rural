@@ -1,13 +1,13 @@
 <view class="page">
   <!-- 顶部操作栏 -->
   <view class="header">
-    <view class="header-title">我的申报</view>
-    <view class="btn-add" wx:if="{{canCreate}}" bindtap="createNew">+ 新建申报</view>
+    <view class="header-title">我的项目</view>
+    <view class="btn-add" wx:if="{{canCreate}}" bindtap="createNew">+ 发起项目申报</view>
   </view>
 
-  <!-- 申报列表 -->
+  <!-- 项目列表 -->
   <view class="list" wx:if="{{list.length > 0}}">
-    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" data-status="{{item.status}}">
       <view class="card-header">
         <view class="card-title">{{item.title}}</view>
         <view class="card-status status-{{item.status}}">{{item.statusText}}</view>
@@ -28,8 +28,8 @@
   <!-- 空状态 -->
   <view class="empty" wx:else>
     <view class="empty-icon">📋</view>
-    <view class="empty-text">暂无申报项目</view>
-    <view class="empty-hint" wx:if="{{canCreate}}">点击右上角"新建申报"开始</view>
-    <view class="empty-hint" wx:else>当前角色不可新建申报，可查看申报详情与审核状态</view>
+    <view class="empty-text">暂无项目记录</view>
+    <view class="empty-hint" wx:if="{{canCreate}}">点击右上角"发起申报"开始</view>
+    <view class="empty-hint" wx:else>当前角色暂无相关项目</view>
   </view>
 </view>

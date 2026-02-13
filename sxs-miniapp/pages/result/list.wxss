@@ -66,11 +66,6 @@
   margin-left: 16rpx;
 }
 
-.status-draft {
-  color: #8c8c8c;
-  background: #f0f0f0;
-}
-
 .status-pending {
   color: #fa8c16;
   background: #fff7e6;

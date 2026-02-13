@@ -95,7 +95,8 @@ const evaluationApi = {
   submitScore: (projectId, data) =>
     post(`/evaluation/score/${projectId}`, data),
   // 获取排名
-  getRanking: (evaluationId) => get("/evaluation/ranking", { evaluationId }),
+  getRanking: (evaluationId) =>
+    get("/evaluation/ranking", evaluationId ? { evaluationId } : {}),
   // 设置获奖等级
   setAward: (projectId, awardLevel) =>
     post(`/evaluation/award/${projectId}`, { awardLevel }),

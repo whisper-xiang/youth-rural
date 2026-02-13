@@ -1,4 +1,5 @@
-const { projectApi, userApi, resultApi } = require("../../utils/api");
+const { projectApi, resultApi, userApi } = require("../../utils/api");
+const { debug } = require("../../utils/debug");
 const { uploadImage } = require("../../utils/request");
 
 Page({
@@ -82,18 +83,22 @@ Page({
         mode === "create"
           ? "新建申报"
           : mode === "edit"
-          ? "编辑申报"
-          : "申报详情",
+            ? "编辑申报"
+            : "申报详情",
     });
   },
 
   // 加载教师列表
   async loadTeachers() {
     try {
-      const teachers = await userApi.getTeachers();
+      // 先获取用户信息以获取学院ID
+      const userInfo = await userApi.getInfo();
+      const teachers = await userApi.getTeachers(userInfo.collegeId);
       this.setData({ teacherOptions: teachers });
     } catch (err) {
       console.error("加载教师列表失败:", err);
+      // 如果获取失败，设置为空数组
+      this.setData({ teacherOptions: [] });
     }
   },
 
@@ -101,8 +106,9 @@ Page({
   async loadDetail(id) {
     try {
       const res = await projectApi.getDetail(id);
+      debug.log("加载项目详情原始数据:", res);
+
       const statusMap = {
-        draft: "草稿",
         pending: "待学院审核",
         college_approved: "待校级审核",
         school_approved: "审核通过",
@@ -140,7 +146,15 @@ Page({
         plan: res.plan || "",
         expectedResult: res.expected_result || "",
       };
+
+      debug.log("处理后的详情数据:", detail);
+      debug.formData(detail, "设置到表单的数据");
+
       this.setData({ form: detail, detail });
+
+      // 验证日期字段是否正确设置
+      debug.log("表单日期字段 - 开始日期:", this.data.form.startDate);
+      debug.log("表单日期字段 - 结束日期:", this.data.form.endDate);
 
       // 加载该项目成果数量（我的成果）
       this.loadResultCount(id);
@@ -227,41 +241,6 @@ Page({
     return true;
   },
 
-  // 保存草稿
-  async saveDraft() {
-    if (this.data.submitting) return;
-    this.setData({ submitting: true });
-
-    try {
-      const { form, id, mode } = this.data;
-      const data = {
-        title: form.title,
-        category: form.theme,
-        description: form.description,
-        targetArea: form.location,
-        start_date: form.startDate,
-        end_date: form.endDate,
-        budget: parseFloat(form.budget) || 0,
-        teacherId: form.teacherId || null,
-        members: form.members,
-        plan: form.plan,
-        expected_result: form.expectedResult,
-      };
-
-      if (mode === "create") {
-        await projectApi.create(data);
-      } else {
-        await projectApi.update(id, data);
-      }
-
-      wx.showToast({ title: "草稿已保存", icon: "success" });
-    } catch (err) {
-      console.error("保存草稿失败:", err);
-    } finally {
-      this.setData({ submitting: false });
-    }
-  },
-
   // 提交申报
   submitForm() {
     if (!this.validateForm()) return;
@@ -279,8 +258,8 @@ Page({
               category: form.theme,
               description: form.description,
               targetArea: form.location,
-              start_date: form.startDate,
-              end_date: form.endDate,
+              startDate: form.startDate,
+              endDate: form.endDate,
               budget: parseFloat(form.budget) || 0,
               teacherId: form.teacherId || null,
               members: form.members,
@@ -288,16 +267,16 @@ Page({
               expected_result: form.expectedResult,
             };
 
-            let projectId = id;
+            // 调试日志
+            debug.formData(data, "提交项目数据");
+
             if (mode === "create") {
-              const createRes = await projectApi.create(data);
-              projectId = createRes.id;
+              await projectApi.create(data);
             } else {
               await projectApi.update(id, data);
+              // 如果是编辑（通常是驳回后重新提交），需要调用提交接口更新状态并触发通知
+              await projectApi.submit(id);
             }
-
-            // 提交审批
-            await projectApi.submit(projectId);
 
             wx.showToast({ title: "提交成功", icon: "success" });
             setTimeout(() => {
@@ -305,6 +284,13 @@ Page({
             }, 1500);
           } catch (err) {
             console.error("提交失败:", err);
+            // 显示更详细的错误信息
+            const errorMessage = err?.message || err?.msg || "提交失败，请重试";
+            wx.showToast({
+              title: errorMessage,
+              icon: "none",
+              duration: 3000,
+            });
           } finally {
             this.setData({ submitting: false });
           }
@@ -345,8 +331,16 @@ Page({
     const title = (this.data.detail && this.data.detail.title) || "";
     wx.navigateTo({
       url: `/pages/result/project?projectId=${id}&title=${encodeURIComponent(
-        title
+        title,
       )}`,
+    });
+  },
+
+  // 进入编辑模式
+  goToEdit() {
+    const { id } = this.data;
+    wx.redirectTo({
+      url: `/pages/activity/apply-detail?id=${id}&mode=edit`,
     });
   },
 

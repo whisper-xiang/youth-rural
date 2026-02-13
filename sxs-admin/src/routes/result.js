@@ -37,7 +37,7 @@ router.get("/list", verifyToken, async (req, res) => {
     // 查询总数
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) as total FROM result r WHERE ${whereSQL}`,
-      params
+      params,
     );
 
     // 查询列表
@@ -51,7 +51,7 @@ router.get("/list", verifyToken, async (req, res) => {
        WHERE ${whereSQL}
        ORDER BY r.created_at DESC
        LIMIT ? OFFSET ?`,
-      [...params, parseInt(pageSize), offset]
+      [...params, parseInt(pageSize), offset],
     );
 
     paginate(res, rows, total, page, pageSize);
@@ -80,7 +80,7 @@ router.get("/my-list", verifyToken, async (req, res) => {
 
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) as total FROM result r WHERE ${whereSQL}`,
-      params
+      params,
     );
 
     const [rows] = await db.query(
@@ -90,7 +90,7 @@ router.get("/my-list", verifyToken, async (req, res) => {
        WHERE ${whereSQL}
        ORDER BY r.created_at DESC
        LIMIT ? OFFSET ?`,
-      [...params, parseInt(pageSize), offset]
+      [...params, parseInt(pageSize), offset],
     );
 
     paginate(res, rows, total, page, pageSize);
@@ -113,7 +113,7 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
        LEFT JOIN project p ON r.project_id = p.id
        LEFT JOIN sys_user u ON r.creator_id = u.id
        WHERE r.id = ?`,
-      [id]
+      [id],
     );
 
     if (!result) {
@@ -123,20 +123,20 @@ router.get("/detail/:id", verifyToken, async (req, res) => {
     // 更新浏览次数
     await db.query(
       "UPDATE result SET view_count = view_count + 1 WHERE id = ?",
-      [id]
+      [id],
     );
 
     // 附件
     const [attachments] = await db.query(
       "SELECT * FROM result_attachment WHERE result_id = ?",
-      [id]
+      [id],
     );
     result.attachments = attachments;
 
     // 图片
     const [images] = await db.query(
       "SELECT image_url FROM result_image WHERE result_id = ? ORDER BY sort",
-      [id]
+      [id],
     );
     result.images = images.map((img) => img.image_url);
 
@@ -173,7 +173,7 @@ router.post("/create", verifyToken, async (req, res) => {
     // 严格模式：仅已通过项目允许提交成果，且必须是项目负责人
     const [[project]] = await conn.query(
       "SELECT id, status FROM project WHERE id = ? AND leader_id = ?",
-      [projectId, userId]
+      [projectId, userId],
     );
     if (!project) {
       return error(res, "无权限操作该项目");
@@ -185,8 +185,8 @@ router.post("/create", verifyToken, async (req, res) => {
     // 创建成果
     const [result] = await conn.query(
       `INSERT INTO result (project_id, title, category, description, cover_url, content, creator_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'draft')`,
-      [projectId, title, category, description, coverUrl, content, userId]
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'published')`,
+      [projectId, title, category, description, coverUrl, content, userId],
     );
 
     const resultId = result.insertId;
@@ -196,7 +196,7 @@ router.post("/create", verifyToken, async (req, res) => {
       for (let i = 0; i < images.length; i++) {
         await conn.query(
           "INSERT INTO result_image (result_id, image_url, sort) VALUES (?, ?, ?)",
-          [resultId, images[i], i]
+          [resultId, images[i], i],
         );
       }
     }
@@ -206,24 +206,24 @@ router.post("/create", verifyToken, async (req, res) => {
       for (const file of files) {
         await conn.query(
           "INSERT INTO result_attachment (result_id, file_name, file_url, file_size, file_type) VALUES (?, ?, ?, ?, ?)",
-          [resultId, file.name, file.url, file.size, file.type || "unknown"]
+          [resultId, file.name, file.url, file.size, file.type || "unknown"],
         );
       }
     }
 
     const [[projectInfo]] = await conn.query(
       "SELECT id, title FROM project WHERE id = ?",
-      [projectId]
+      [projectId],
     );
     await safeCreateNotice({
       conn,
       publisherId: userId,
       type: "activity",
       title: `提交成果：${projectInfo ? projectInfo.title : projectId}`,
-      summary: "项目新增成果（草稿）",
+      summary: "项目已新增成果",
       content: `项目「${
         projectInfo ? projectInfo.title : projectId
-      }」新增成果：${title}（草稿）`,
+      }」新增成果：${title}`,
       source: "成果管理",
     });
 
@@ -258,7 +258,7 @@ router.post("/publish/:id", verifyToken, async (req, res) => {
 
     const [[projectInfo]] = await db.query(
       "SELECT id, title FROM project WHERE id = ?",
-      [result.project_id]
+      [result.project_id],
     );
     await safeCreateNotice({
       publisherId: userId,
@@ -300,7 +300,7 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
 
     const [[projectInfo]] = await db.query(
       "SELECT id, title FROM project WHERE id = ?",
-      [result.project_id]
+      [result.project_id],
     );
     await safeCreateNotice({
       publisherId: userId,

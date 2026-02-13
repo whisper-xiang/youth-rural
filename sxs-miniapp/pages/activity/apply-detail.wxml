@@ -105,7 +105,6 @@
 
   <!-- 底部按钮 -->
   <view class="footer" wx:if="{{!isView}}">
-    <view class="btn-save" bindtap="saveDraft">保存草稿</view>
     <view class="btn-submit" bindtap="submitForm">提交申报</view>
   </view>
 
@@ -113,6 +112,24 @@
   <view class="status-bar" wx:if="{{isView}}">
     <view class="status-label">当前状态：</view>
     <view class="status-value status-{{detail.status}}">{{detail.statusText}}</view>
+  </view>
+
+  <!-- 评优结果展示 -->
+  <view class="evaluation-card" wx:if="{{isView && detail.evaluation && (detail.evaluation.final_score || detail.evaluation.award_level)}}">
+    <view class="evaluation-header">
+      <view class="evaluation-title">评优结果</view>
+      <view class="evaluation-activity">{{detail.evaluation.evaluation_title}}</view>
+    </view>
+    <view class="evaluation-body">
+      <view class="evaluation-score-box" wx:if="{{detail.evaluation.final_score}}">
+        <view class="evaluation-score-value">{{detail.evaluation.final_score}}</view>
+        <view class="evaluation-score-label">最终评分</view>
+      </view>
+      <view class="evaluation-award-box" wx:if="{{detail.evaluation.award_level}}">
+        <view class="evaluation-award-level">{{detail.evaluation.award_level}}</view>
+        <view class="evaluation-award-label">获奖等级</view>
+      </view>
+    </view>
   </view>
 
   <!-- 查看模式下：成果入口（只读） -->
@@ -125,13 +142,10 @@
   </view>
 
   <!-- 查看模式下的操作按钮 -->
-  <view class="footer" wx:if="{{isView && detail.status === 'approved' && (canSubmitResult || canUploadProgress)}}">
-    <view class="btn-result" wx:if="{{canSubmitResult}}" bindtap="goToResult">提交成果</view>
-    <view class="btn-progress" wx:if="{{canUploadProgress}}" bindtap="goToProgress">上传进度</view>
-  </view>
-
-  <!-- 教师结项（仅已通过项目可结项） -->
-  <view class="footer" wx:if="{{isView && canCloseProject && detail.status === 'approved'}}">
-    <view class="btn-close" bindtap="closeProject">结项</view>
+  <view class="footer" wx:if="{{isView}}">
+    <view class="btn-edit" wx:if="{{detail.status === 'rejected'}}" bindtap="goToEdit">修改申报</view>
+    <view class="btn-result" wx:if="{{detail.status === 'approved' && canSubmitResult}}" bindtap="goToResult">提交成果</view>
+    <view class="btn-progress" wx:if="{{detail.status === 'approved' && canUploadProgress}}" bindtap="goToProgress">上传进度</view>
+    <view class="btn-close" wx:if="{{canCloseProject && detail.status === 'approved'}}" bindtap="closeProject">结项</view>
   </view>
 </view>

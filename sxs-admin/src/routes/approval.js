@@ -28,7 +28,7 @@ router.get(
         // 学院管理员：只能审批本学院待学院审核的项目
         const [[user]] = await db.query(
           "SELECT college_id FROM sys_user WHERE id = ?",
-          [userId]
+          [userId],
         );
         whereClauses.push("p.college_id = ?");
         params.push(user.college_id);
@@ -45,7 +45,7 @@ router.get(
         if (status === "pending") {
           whereClauses.push("p.status = 'college_approved'");
         } else if (status === "approved") {
-          whereClauses.push("p.status = 'school_approved'");
+          whereClauses.push("p.status = 'approved'");
         } else if (status === "rejected") {
           whereClauses.push("p.status = 'rejected'");
         }
@@ -57,7 +57,7 @@ router.get(
       // 查询总数
       const [[{ total }]] = await db.query(
         `SELECT COUNT(*) as total FROM project p WHERE ${whereSQL}`,
-        params
+        params,
       );
 
       // 查询列表
@@ -73,7 +73,7 @@ router.get(
        WHERE ${whereSQL}
        ORDER BY p.created_at DESC
        LIMIT ? OFFSET ?`,
-        [...params, parseInt(pageSize), offset]
+        [...params, parseInt(pageSize), offset],
       );
 
       paginate(res, rows, total, page, pageSize);
@@ -81,7 +81,7 @@ router.get(
       console.error("Get approval list error:", err);
       error(res, "获取审批列表失败", 500);
     }
-  }
+  },
 );
 
 // 审批通过
@@ -102,7 +102,7 @@ router.post(
       // 检查项目状态
       const [[project]] = await conn.query(
         "SELECT * FROM project WHERE id = ?",
-        [id]
+        [id],
       );
       if (!project) {
         return error(res, "项目不存在");
@@ -121,7 +121,7 @@ router.post(
         if (project.status !== "college_approved") {
           return error(res, "项目状态不正确");
         }
-        newStatus = "school_approved";
+        newStatus = "approved";
         approvalLevel = "school";
       }
 
@@ -135,7 +135,7 @@ router.post(
       await conn.query(
         `INSERT INTO approval_record (project_id, approver_id, approval_level, action, opinion)
        VALUES (?, ?, ?, 'approve', ?)`,
-        [id, userId, approvalLevel, opinion]
+        [id, userId, approvalLevel, opinion],
       );
 
       // 发送消息通知
@@ -149,7 +149,7 @@ router.post(
             role === "college_admin" ? "学院" : "学校"
           }审批`,
           id,
-        ]
+        ],
       );
 
       await safeCreateNotice({
@@ -173,7 +173,7 @@ router.post(
     } finally {
       conn.release();
     }
-  }
+  },
 );
 
 // 审批驳回
@@ -197,7 +197,7 @@ router.post(
 
       const [[project]] = await conn.query(
         "SELECT * FROM project WHERE id = ?",
-        [id]
+        [id],
       );
       if (!project) {
         return error(res, "项目不存在");
@@ -219,14 +219,14 @@ router.post(
       // 更新项目状态
       await conn.query(
         "UPDATE project SET status = ?, reject_reason = ? WHERE id = ?",
-        ["rejected", opinion, id]
+        ["rejected", opinion, id],
       );
 
       // 记录审批
       await conn.query(
         `INSERT INTO approval_record (project_id, approver_id, approval_level, action, opinion)
        VALUES (?, ?, ?, 'reject', ?)`,
-        [id, userId, approvalLevel, opinion]
+        [id, userId, approvalLevel, opinion],
       );
 
       // 发送消息通知
@@ -238,7 +238,7 @@ router.post(
           "项目审批被驳回",
           `您的项目「${project.title}」审批未通过，原因：${opinion}`,
           id,
-        ]
+        ],
       );
 
       await safeCreateNotice({
@@ -262,7 +262,7 @@ router.post(
     } finally {
       conn.release();
     }
-  }
+  },
 );
 
 module.exports = router;

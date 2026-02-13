@@ -62,7 +62,7 @@ CREATE TABLE `project` (
   `leader_id` BIGINT NOT NULL COMMENT '负责人ID',
   `teacher_id` BIGINT COMMENT '指导教师ID',
   `college_id` BIGINT COMMENT '所属学院ID',
-  `status` VARCHAR(20) DEFAULT 'draft' COMMENT '状态: draft/pending/college_approved/school_approved/rejected/completed',
+  `status` VARCHAR(20) DEFAULT 'pending' COMMENT '状态: pending(待审核)/college_approved(院审通过)/school_approved(校审通过)/approved(已立项)/closed(已结项)/rejected(已驳回)',
   `reject_reason` VARCHAR(500) COMMENT '驳回原因',
   `is_excellent` TINYINT DEFAULT 0 COMMENT '是否优秀项目: 0否 1是',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -75,7 +75,7 @@ CREATE TABLE `project` (
 ) COMMENT '项目申报表';
 
 -- 项目类别字典
--- category: theory(理论普及宣讲), village(乡村振兴促进), observe(发展成就观察), unity(民族团结实践)
+-- category: 乡村振兴, 支教助学, 红色文化, 科技支农, 医疗卫生, 法律援助, 其他
 
 -- 项目团队成员表
 CREATE TABLE `project_member` (
@@ -176,7 +176,7 @@ CREATE TABLE `result` (
   `content` TEXT COMMENT '成果内容(富文本)',
   `creator_id` BIGINT NOT NULL COMMENT '创建人ID',
   `view_count` INT DEFAULT 0 COMMENT '浏览次数',
-  `status` VARCHAR(20) DEFAULT 'draft' COMMENT '状态: draft/published',
+  `status` VARCHAR(20) DEFAULT 'published' COMMENT '状态: published',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX `idx_project` (`project_id`),
@@ -237,7 +237,7 @@ CREATE TABLE `evaluation_project` (
   `is_top` TINYINT DEFAULT 0 COMMENT '是否置顶推荐: 0否 1是',
   `final_score` DECIMAL(5,2) COMMENT '最终得分',
   `rank` INT COMMENT '排名',
-  `award_level` VARCHAR(50) COMMENT '获奖等级: first/second/third/excellent',
+  `award_level` VARCHAR(50) COMMENT '获奖等级: 一等奖/二等奖/三等奖/优秀奖',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX `idx_evaluation` (`evaluation_id`),
   INDEX `idx_project` (`project_id`),
@@ -279,7 +279,7 @@ CREATE TABLE `notice` (
   `publisher_id` BIGINT COMMENT '发布人ID',
   `is_top` TINYINT DEFAULT 0 COMMENT '是否置顶: 0否 1是',
   `view_count` INT DEFAULT 0 COMMENT '浏览次数',
-  `status` VARCHAR(20) DEFAULT 'draft' COMMENT '状态: draft/published',
+  `status` VARCHAR(20) DEFAULT 'published' COMMENT '状态: published',
   `publish_time` DATETIME COMMENT '发布时间',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
