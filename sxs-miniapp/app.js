@@ -92,6 +92,8 @@ App({
         desc: "创建和管理申报项目",
         url: "/pages/activity/apply-list",
         icon: "icon-apply",
+        iconType: "success",
+        iconSymbol: "📝",
       },
       {
         key: "approve",
@@ -99,6 +101,8 @@ App({
         desc: "审核项目申报材料",
         url: "/pages/approve/list",
         icon: "icon-approve",
+        iconType: "info",
+        iconSymbol: "✅",
       },
       {
         key: "progress",
@@ -106,6 +110,8 @@ App({
         desc: "上传和查看活动进展",
         url: "/pages/progress/list",
         icon: "icon-progress",
+        iconType: "warn",
+        iconSymbol: "📊",
       },
       {
         key: "result",
@@ -113,6 +119,8 @@ App({
         desc: "提交和浏览活动成果",
         url: "/pages/result/list",
         icon: "icon-result",
+        iconType: "success",
+        iconSymbol: "📁",
       },
       {
         key: "evaluate",
@@ -120,6 +128,8 @@ App({
         desc: "项目评审与打分",
         url: "/pages/evaluate/list",
         icon: "icon-evaluate",
+        iconType: "warn",
+        iconSymbol: "⭐",
       },
       {
         key: "notice",
@@ -127,6 +137,8 @@ App({
         desc: "查看最新通知",
         url: "/pages/notice/list",
         icon: "icon-notice",
+        iconType: "info",
+        iconSymbol: "📢",
       },
     ];
 

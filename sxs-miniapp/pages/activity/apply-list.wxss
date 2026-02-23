@@ -98,10 +98,25 @@
   margin-top: 12rpx;
   padding-top: 12rpx;
   border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .card-time {
   font-size: 22rpx;
   color: #bfbfbf;
+}
+.card-actions {
+  display: flex;
+  gap: 16rpx;
+}
+.edit-btn {
+  font-size: 22rpx;
+  color: #2b5aed;
+  padding: 8rpx 16rpx;
+  border: 1rpx solid #2b5aed;
+  border-radius: 6rpx;
+  background: transparent;
 }
 
 /* 空状态 */

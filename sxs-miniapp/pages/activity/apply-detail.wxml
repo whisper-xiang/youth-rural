@@ -104,9 +104,15 @@
   </view>
 
   <!-- 底部按钮 -->
-  <view class="footer" wx:if="{{!isView}}">
+  <view class="footer" wx:if="{{mode === 'create'}}">
     <view class="btn-save" bindtap="saveDraft">保存草稿</view>
     <view class="btn-submit" bindtap="submitForm">提交申报</view>
+  </view>
+
+  <!-- 编辑模式底部按钮 -->
+  <view class="footer" wx:if="{{mode === 'edit'}}">
+    <view class="btn-save" bindtap="saveEdit">保存修改</view>
+    <view class="btn-submit" wx:if="{{detail.status === 'draft' || detail.status === 'rejected'}}" bindtap="submitForm">重新提交</view>
   </view>
 
   <!-- 查看模式下的状态 -->

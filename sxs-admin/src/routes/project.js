@@ -66,6 +66,7 @@ router.get("/list", verifyToken, async (req, res) => {
       `SELECT p.*, 
               (SELECT COUNT(*) FROM progress pg WHERE pg.project_id = p.id) as progress_count,
               (SELECT COUNT(*) FROM result r WHERE r.project_id = p.id AND r.creator_id = ?) as my_result_count,
+              (SELECT COUNT(*) FROM project_member pm WHERE pm.project_id = p.id) as members_count,
               u.real_name as leader_name,
               t.real_name as teacher_name,
               c.name as college_name
@@ -348,7 +349,7 @@ router.put("/update/:id", verifyToken, async (req, res) => {
     if (project.leader_id !== req.user.id && req.user.role !== "school_admin") {
       return error(res, "无权限修改");
     }
-    if (!["draft", "rejected"].includes(project.status)) {
+    if (!["draft", "pending", "rejected"].includes(project.status)) {
       return error(res, "当前状态不允许修改");
     }
 

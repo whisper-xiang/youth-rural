@@ -50,7 +50,9 @@
     <view class="module-grid">
       <view class="module-card" wx:for="{{modules}}" wx:key="key" bindtap="goToPage" data-url="{{item.url}}">
         <view class="module-icon-wrap">
-          <view class="module-icon {{item.icon}}"></view>
+          <view class="module-icon {{item.icon}}">
+            <text class="module-icon-inner">{{item.iconSymbol || '•'}}</text>
+          </view>
         </view>
         <view class="module-info">
           <view class="module-name">{{item.name}}</view>

@@ -7,20 +7,23 @@
 
   <!-- 申报列表 -->
   <view class="list" wx:if="{{list.length > 0}}">
-    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}" data-status="{{item.status}}">
       <view class="card-header">
         <view class="card-title">{{item.title}}</view>
         <view class="card-status status-{{item.status}}">{{item.statusText}}</view>
       </view>
       <view class="card-info">
-        <text class="info-item">负责人：{{item.leader}}</text>
-        <text class="info-item">成员：{{item.memberCount}}人</text>
+        <text class="info-item">负责人：{{item.leader_name}}</text>
+        <text class="info-item">成员：{{item.members_count}}人</text>
       </view>
       <view class="card-info">
-        <text class="info-item">实践地点：{{item.location}}</text>
+        <text class="info-item">实践地点：{{item.target_area}}</text>
       </view>
       <view class="card-footer">
         <text class="card-time">{{item.createTime}}</text>
+        <view class="card-actions" wx:if="{{item.status === 'draft' || item.status === 'pending'}}" catchtap="goEdit" data-id="{{item.id}}">
+          <text class="edit-btn">编辑</text>
+        </view>
       </view>
     </view>
   </view>

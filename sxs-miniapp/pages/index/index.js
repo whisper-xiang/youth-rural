@@ -32,6 +32,18 @@ Page({
     if (isLogin) {
       const userInfo = app.globalData.userInfo;
       const modules = app.getRoleModules();
+      const iconSymbolMap = {
+        apply: "📝",
+        approve: "✅",
+        progress: "📊",
+        result: "📁",
+        evaluate: "⭐",
+        notice: "📢",
+      };
+      const modulesWithIcons = (modules || []).map((m) => ({
+        ...m,
+        iconSymbol: m.iconSymbol || iconSymbolMap[m.key] || "•",
+      }));
       this.setData({
         isLogin: true,
         userInfo: {
@@ -39,7 +51,7 @@ Page({
           roleName: userInfo.roleName,
           avatarText: userInfo.name.slice(0, 1),
         },
-        modules,
+        modules: modulesWithIcons,
       });
       // 加载统计数据
       this.loadStats();

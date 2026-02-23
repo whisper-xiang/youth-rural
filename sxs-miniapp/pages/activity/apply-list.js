@@ -29,8 +29,7 @@ Page({
       app.hasPermission("apply.create")
     );
     this.setData({ canCreate });
-    // 每次显示时刷新列表
-    this.loadList(true);
+    // 返回列表时不自动刷新，避免接口偶发为空导致列表被清空
   },
 
   onPullDownRefresh() {
@@ -56,6 +55,8 @@ Page({
         pageSize: this.data.pageSize,
       });
 
+      console.log("接口返回数据示例:", res.list?.[0]);
+
       const statusMap = {
         draft: "草稿",
         pending: "待学院审核",
@@ -63,14 +64,24 @@ Page({
         school_approved: "审核通过",
         approved: "审核通过",
         closed: "已结项",
+        completed: "已结项",
         rejected: "已驳回",
       };
 
-      const newList = res.list.map((item) => ({
-        ...item,
-        statusText: statusMap[item.status] || item.status,
-        createTime: item.created_at ? item.created_at.slice(0, 10) : "",
-      }));
+      const rawList = Array.isArray(res.list) ? res.list : [];
+      const newList = rawList.map((item) => {
+        console.log("处理项目数据:", {
+          leader_name: item.leader_name,
+          target_area: item.target_area,
+          members_count: item.members_count,
+        });
+
+        return {
+          ...item,
+          statusText: statusMap[item.status] || item.status,
+          createTime: item.created_at ? item.created_at.slice(0, 10) : "",
+        };
+      });
 
       this.setData({
         list: refresh ? newList : [...this.data.list, ...newList],
@@ -95,8 +106,18 @@ Page({
   // 查看详情
   goDetail(e) {
     const id = e.currentTarget.dataset.id;
+    const status = e.currentTarget.dataset.status;
+    const mode = status === "pending" ? "edit" : "view";
     wx.navigateTo({
-      url: `/pages/activity/apply-detail?id=${id}&mode=view`,
+      url: `/pages/activity/apply-detail?id=${id}&mode=${mode}`,
+    });
+  },
+
+  // 编辑项目
+  goEdit(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.navigateTo({
+      url: `/pages/activity/apply-detail?id=${id}&mode=edit`,
     });
   },
 });

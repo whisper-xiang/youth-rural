@@ -239,8 +239,8 @@ Page({
         category: form.theme,
         description: form.description,
         targetArea: form.location,
-        start_date: form.startDate,
-        end_date: form.endDate,
+        startDate: form.startDate,
+        endDate: form.endDate,
         budget: parseFloat(form.budget) || 0,
         teacherId: form.teacherId || null,
         members: form.members,
@@ -257,6 +257,41 @@ Page({
       wx.showToast({ title: "草稿已保存", icon: "success" });
     } catch (err) {
       console.error("保存草稿失败:", err);
+    } finally {
+      this.setData({ submitting: false });
+    }
+  },
+
+  // 保存编辑
+  async saveEdit() {
+    if (this.data.submitting) return;
+    this.setData({ submitting: true });
+
+    try {
+      const { form, id } = this.data;
+      const data = {
+        title: form.title,
+        category: form.theme,
+        description: form.description,
+        targetArea: form.location,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        budget: parseFloat(form.budget) || 0,
+        teacherId: form.teacherId || null,
+        members: form.members,
+        plan: form.plan,
+        expected_result: form.expectedResult,
+      };
+
+      await projectApi.update(id, data);
+
+      // 重新加载详情以更新状态
+      await this.loadDetail(id);
+
+      wx.showToast({ title: "修改已保存", icon: "success" });
+    } catch (err) {
+      console.error("保存修改失败:", err);
+      wx.showToast({ title: "保存失败", icon: "none" });
     } finally {
       this.setData({ submitting: false });
     }
@@ -279,8 +314,8 @@ Page({
               category: form.theme,
               description: form.description,
               targetArea: form.location,
-              start_date: form.startDate,
-              end_date: form.endDate,
+              startDate: form.startDate,
+              endDate: form.endDate,
               budget: parseFloat(form.budget) || 0,
               teacherId: form.teacherId || null,
               members: form.members,

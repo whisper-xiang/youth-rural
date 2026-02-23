@@ -180,6 +180,10 @@
   border-radius: 16rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
+.module-card:active {
+  transform: scale(0.98);
+  background: #fafafa;
+}
 .module-icon-wrap {
   width: 88rpx;
   height: 88rpx;
@@ -193,6 +197,18 @@
   width: 88rpx;
   height: 88rpx;
   border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.module-icon-inner {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 36rpx;
+  line-height: 1;
+  color: #ffffff;
+  font-weight: 600;
 }
 .icon-apply {
   background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
