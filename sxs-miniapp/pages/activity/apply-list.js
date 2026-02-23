@@ -18,7 +18,10 @@ Page({
       app.hasPermission("apply.create")
     );
 
-    this.setData({ canCreate });
+    // 检查是否为教师角色
+    const isTeacher = app.globalData.role === "teacher";
+
+    this.setData({ canCreate, isTeacher });
     this.loadList(true);
   },
 
@@ -29,7 +32,11 @@ Page({
       app.hasPermission &&
       app.hasPermission("apply.create")
     );
-    this.setData({ canCreate });
+
+    // 检查是否为教师角色
+    const isTeacher = app.globalData.role === "teacher";
+
+    this.setData({ canCreate, isTeacher });
     // 返回列表时不自动刷新，避免接口偶发为空导致列表被清空
   },
 

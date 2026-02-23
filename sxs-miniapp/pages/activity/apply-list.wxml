@@ -21,7 +21,7 @@
       </view>
       <view class="card-footer">
         <text class="card-time">{{item.createTime}}</text>
-        <view class="card-actions" wx:if="{{item.status === 'draft' || item.status === 'pending'}}" catchtap="goEdit" data-id="{{item.id}}">
+        <view class="card-actions" wx:if="{{(item.status === 'draft' || item.status === 'pending') && !isTeacher}}" catchtap="goEdit" data-id="{{item.id}}">
           <text class="edit-btn">编辑</text>
         </view>
       </view>

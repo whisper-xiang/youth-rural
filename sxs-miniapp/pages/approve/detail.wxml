@@ -1,9 +1,16 @@
 <view class="page">
-  <!-- 状态头部 -->
-  <view class="status-header status-bg-{{detail.status}}">
-    <view class="status-text">{{detail.statusText}}</view>
-    <view class="status-time" wx:if="{{detail.approveTime}}">审批时间：{{detail.approveTime}}</view>
+  <!-- 加载状态 -->
+  <view class="loading-container" wx:if="{{!detail && loading}}">
+    <view class="loading-text">加载中...</view>
   </view>
+
+  <!-- 内容区域 -->
+  <view wx:if="{{detail}}">
+    <!-- 状态头部 -->
+    <view class="status-header status-bg-{{detail.status}}">
+      <view class="status-text">{{detail.statusText}}</view>
+      <view class="status-time" wx:if="{{detail.approveTime}}">审批时间：{{detail.approveTime}}</view>
+    </view>
 
   <!-- 项目信息 -->
   <view class="section">
@@ -93,7 +100,8 @@
 
   <!-- 底部按钮 -->
   <view class="footer" wx:if="{{detail.status === 'pending'}}">
-    <view class="btn-reject" bindtap="doReject">驳回</view>
-    <view class="btn-approve" bindtap="doApprove">通过</view>
+    <view class="btn-reject {{loading ? 'disabled' : ''}}" bindtap="doReject">{{loading ? '处理中...' : '驳回'}}</view>
+    <view class="btn-approve {{loading ? 'disabled' : ''}}" bindtap="doApprove">{{loading ? '处理中...' : '通过'}}</view>
+  </view>
   </view>
 </view>
