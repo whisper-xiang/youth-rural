@@ -6,9 +6,17 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "init-demo": "node scripts/init_demo_data.js",
+    "init-student": "node scripts/init_student_demo.js",
+    "init-complete": "node scripts/init_complete_demo.js",
+    "quick-start": "node scripts/quick_start.js"
   },
-  "keywords": ["三下乡", "社会实践", "微信小程序"],
+  "keywords": [
+    "三下乡",
+    "社会实践",
+    "微信小程序"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
