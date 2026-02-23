@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="header">
+    <view class="title">评优获奖名单</view>
+    <view class="subtitle">展示各项目在评优环节中的最终表现与获奖情况</view>
+  </view>
+
+  <view class="ranking-list" wx:if="{{rankingList.length > 0}}">
+    <view class="ranking-item {{index < 3 ? 'top-three' : ''}}" wx:for="{{rankingList}}" wx:key="project_id">
+      <view class="rank-number">
+        <text class="rank-text {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</text>
+      </view>
+      
+      <view class="project-info">
+        <view class="project-title">{{item.title}}</view>
+        <view class="project-meta">
+          <text class="leader">{{item.leader_name}}</text>
+          <text class="separator">|</text>
+          <text class="college">{{item.college_name}}</text>
+        </view>
+        <view class="award-badge" wx:if="{{item.award_level}}">
+          <text class="award-text">{{item.award_level}}</text>
+        </view>
+      </view>
+
+      <view class="score-box">
+        <view class="score-value">{{item.final_score || '0.0'}}</view>
+        <view class="score-label">最终得分</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:else>
+    <view class="empty-text">暂无评优结果数据</view>
+  </view>
+</view>

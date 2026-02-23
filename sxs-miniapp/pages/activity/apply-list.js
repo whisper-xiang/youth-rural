@@ -17,6 +17,7 @@ Page({
       app.hasPermission &&
       app.hasPermission("apply.create")
     );
+
     this.setData({ canCreate });
     this.loadList(true);
   },
@@ -58,7 +59,6 @@ Page({
       console.log("接口返回数据示例:", res.list?.[0]);
 
       const statusMap = {
-        draft: "草稿",
         pending: "待学院审核",
         college_approved: "待校级审核",
         school_approved: "审核通过",
@@ -66,6 +66,7 @@ Page({
         closed: "已结项",
         completed: "已结项",
         rejected: "已驳回",
+        withdrawn: "已撤回",
       };
 
       const rawList = Array.isArray(res.list) ? res.list : [];
@@ -107,17 +108,17 @@ Page({
   goDetail(e) {
     const id = e.currentTarget.dataset.id;
     const status = e.currentTarget.dataset.status;
-    const mode = status === "pending" ? "edit" : "view";
-    wx.navigateTo({
-      url: `/pages/activity/apply-detail?id=${id}&mode=${mode}`,
-    });
-  },
 
-  // 编辑项目
-  goEdit(e) {
-    const id = e.currentTarget.dataset.id;
-    wx.navigateTo({
-      url: `/pages/activity/apply-detail?id=${id}&mode=edit`,
-    });
+    // 如果项目已立项（approved / school_approved / closed），进入工作台
+    if (["approved", "school_approved", "closed"].includes(status)) {
+      wx.navigateTo({
+        url: `/pages/project/workspace?id=${id}`,
+      });
+    } else {
+      // 否则进入申请详情页（查看审核状态或重新编辑提交）
+      wx.navigateTo({
+        url: `/pages/activity/apply-detail?id=${id}&mode=view`,
+      });
+    }
   },
 });

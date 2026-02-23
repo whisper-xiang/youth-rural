@@ -80,13 +80,13 @@ Page({
   // 获取状态文本
   getStatusText(status) {
     const statusMap = {
-      draft: "草稿",
       pending: "待学院审核",
       college_approved: "待校级审核",
       school_approved: "审核通过",
       approved: "审核通过",
       closed: "已结项",
       rejected: "已驳回",
+      withdrawn: "已撤回",
     };
     return statusMap[status] || status;
   },

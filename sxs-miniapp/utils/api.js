@@ -39,6 +39,8 @@ const projectApi = {
   update: (id, data) => put(`/project/update/${id}`, data),
   // 提交审批
   submit: (id) => post(`/project/submit/${id}`),
+  // 撤销审批
+  revoke: (id) => post(`/project/revoke/${id}`),
   // 教师结项
   close: (id) => post(`/project/close/${id}`),
   // 删除项目
@@ -95,7 +97,8 @@ const evaluationApi = {
   submitScore: (projectId, data) =>
     post(`/evaluation/score/${projectId}`, data),
   // 获取排名
-  getRanking: (evaluationId) => get("/evaluation/ranking", { evaluationId }),
+  getRanking: (evaluationId) =>
+    get("/evaluation/ranking", evaluationId ? { evaluationId } : {}),
   // 设置获奖等级
   setAward: (projectId, awardLevel) =>
     post(`/evaluation/award/${projectId}`, { awardLevel }),

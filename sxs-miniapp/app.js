@@ -58,13 +58,7 @@ App({
       "progress.view": ["student", "teacher", "college_admin", "school_admin"],
       // 成果管理
       "result.submit": ["student"],
-      "result.view": [
-        "student",
-        "teacher",
-        "college_admin",
-        "school_admin",
-        "expert",
-      ],
+      "result.view": ["student", "teacher", "college_admin", "school_admin"],
       // 评优管理
       "evaluate.score": ["expert"],
       "evaluate.manage": ["school_admin"],
@@ -85,11 +79,19 @@ App({
   // 获取角色对应的首页模块
   getRoleModules() {
     const role = this.globalData.role;
+
     const allModules = [
       {
+        key: "create",
+        name: "项目申报",
+        desc: "发起新的社会实践项目申请",
+        url: "/pages/activity/apply-detail?mode=create",
+        icon: "icon-create",
+      },
+      {
         key: "apply",
-        name: "项目管理",
-        desc: "创建和管理申报项目",
+        name: "我的项目",
+        desc: "跟踪申报进度与项目管理",
         url: "/pages/activity/apply-list",
         icon: "icon-apply",
         iconType: "success",
@@ -105,18 +107,9 @@ App({
         iconSymbol: "✅",
       },
       {
-        key: "progress",
-        name: "进度跟踪",
-        desc: "上传和查看活动进展",
-        url: "/pages/progress/list",
-        icon: "icon-progress",
-        iconType: "warn",
-        iconSymbol: "📊",
-      },
-      {
         key: "result",
-        name: "成果管理",
-        desc: "提交和浏览活动成果",
+        name: "成果汇总",
+        desc: "查阅和管理活动实践成果",
         url: "/pages/result/list",
         icon: "icon-result",
         iconType: "success",
@@ -124,37 +117,44 @@ App({
       },
       {
         key: "evaluate",
-        name: "评优管理",
-        desc: "项目评审与打分",
+        name: "项目评审",
+        desc: "对申报项目进行打分与评价",
         url: "/pages/evaluate/list",
         icon: "icon-evaluate",
         iconType: "warn",
         iconSymbol: "⭐",
       },
       {
+        key: "ranking",
+        name: "评优榜单",
+        desc: "查看优秀项目公示结果",
+        url: "/pages/evaluate/ranking",
+        icon: "icon-ranking",
+      },
+      {
         key: "notice",
-        name: "通知公告",
-        desc: "查看最新通知",
+        name: "消息公告",
+        desc: "查阅系统通知与活动资讯",
         url: "/pages/notice/list",
         icon: "icon-notice",
         iconType: "info",
         iconSymbol: "📢",
       },
+      {
+        key: "notice_manage",
+        name: "通知发布",
+        desc: "发布和管理系统公告",
+        url: "/pages/notice/create",
+        icon: "icon-notice-manage",
+      },
     ];
 
     const roleModules = {
-      student: ["apply", "progress", "result", "notice"],
-      teacher: ["apply", "progress", "result", "notice"],
-      college_admin: ["apply", "approve", "progress", "result", "notice"],
-      school_admin: [
-        "apply",
-        "approve",
-        "progress",
-        "result",
-        "evaluate",
-        "notice",
-      ],
-      expert: ["result", "evaluate", "notice"],
+      student: ["create", "apply", "notice", "ranking"],
+      teacher: ["apply", "result", "notice", "ranking"],
+      college_admin: ["approve", "notice_manage", "ranking"],
+      school_admin: ["approve", "evaluate", "notice_manage", "ranking"],
+      expert: ["evaluate", "notice", "ranking"],
     };
 
     const allowedKeys = roleModules[role] || [];

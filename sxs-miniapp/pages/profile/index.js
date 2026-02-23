@@ -1,21 +1,16 @@
 const app = getApp();
-const { userApi, noticeApi } = require('../../utils/api');
+const { userApi, noticeApi } = require("../../utils/api");
 
 Page({
   data: {
     isLogin: false,
     userInfo: {
-      name: '未登录',
-      roleName: '请先登录',
-      avatarText: '?'
-    },
-    stats: {
-      applyCount: 0,
-      progressCount: 0,
-      resultCount: 0
+      name: "未登录",
+      roleName: "请先登录",
+      avatarText: "?",
     },
     unreadCount: 0,
-    menuItems: []
+    menuItems: [],
   },
 
   onLoad() {
@@ -37,41 +32,22 @@ Page({
         userInfo: {
           name: userInfo.name,
           roleName: userInfo.roleName,
-          avatarText: userInfo.name.slice(0, 1)
+          avatarText: userInfo.name.slice(0, 1),
         },
-        menuItems
+        menuItems,
       });
-      // 加载统计数据
-      this.loadStats();
       this.loadUnreadCount();
     } else {
       this.setData({
         isLogin: false,
         userInfo: {
-          name: '未登录',
-          roleName: '请先登录',
-          avatarText: '?'
+          name: "未登录",
+          roleName: "请先登录",
+          avatarText: "?",
         },
-        stats: { applyCount: 0, progressCount: 0, resultCount: 0 },
         unreadCount: 0,
-        menuItems: []
+        menuItems: [],
       });
-    }
-  },
-
-  // 加载统计数据
-  async loadStats() {
-    try {
-      const stats = await userApi.getStats();
-      this.setData({
-        stats: {
-          applyCount: stats.projectCount || 0,
-          progressCount: stats.progressCount || 0,
-          resultCount: stats.resultCount || 0
-        }
-      });
-    } catch (err) {
-      console.error('加载统计数据失败:', err);
     }
   },
 
@@ -81,27 +57,48 @@ Page({
       const res = await noticeApi.getUnreadCount();
       this.setData({ unreadCount: res.count || 0 });
     } catch (err) {
-      console.error('加载未读数失败:', err);
+      console.error("加载未读数失败:", err);
     }
   },
 
   // 根据角色获取菜单
   getMenuByRole(role) {
     const allMenus = [
-      { key: 'apply', name: '我的申报', url: '/pages/activity/apply-list', icon: 'icon-apply', roles: ['student'] },
-      { key: 'progress', name: '进度记录', url: '/pages/progress/list', icon: 'icon-progress', roles: ['student', 'teacher'] },
-      { key: 'result', name: '我的成果', url: '/pages/result/list', icon: 'icon-result', roles: ['student'] },
-      { key: 'approve', name: '待审项目', url: '/pages/approve/list', icon: 'icon-approve', roles: ['college_admin', 'school_admin'] },
-      { key: 'evaluate', name: '待评项目', url: '/pages/evaluate/list', icon: 'icon-evaluate', roles: ['expert', 'school_admin'] },
-      { key: 'notice', name: '消息通知', url: '/pages/notice/list', icon: 'icon-notice', roles: ['student', 'teacher', 'college_admin', 'school_admin', 'expert'] }
+      {
+        key: "approve",
+        name: "待审项目",
+        url: "/pages/approve/list",
+        icon: "icon-approve",
+        roles: ["college_admin", "school_admin"],
+      },
+      {
+        key: "evaluate",
+        name: "待评项目",
+        url: "/pages/evaluate/list",
+        icon: "icon-evaluate",
+        roles: ["expert", "school_admin"],
+      },
+      {
+        key: "notice",
+        name: "消息通知",
+        url: "/pages/notice/list",
+        icon: "icon-notice",
+        roles: [
+          "student",
+          "teacher",
+          "college_admin",
+          "school_admin",
+          "expert",
+        ],
+      },
     ];
-    return allMenus.filter(m => m.roles.includes(role));
+    return allMenus.filter((m) => m.roles.includes(role));
   },
 
   // 跳转登录
   goLogin() {
     wx.navigateTo({
-      url: '/pages/auth/login'
+      url: "/pages/auth/login",
     });
   },
 
@@ -109,10 +106,10 @@ Page({
   goToPage(e) {
     const url = e.currentTarget.dataset.url;
     const tabBarPages = [
-      '/pages/index/index',
-      '/pages/activity/apply-list',
-      '/pages/progress/list',
-      '/pages/profile/index'
+      "/pages/index/index",
+      "/pages/activity/apply-list",
+      "/pages/progress/list",
+      "/pages/profile/index",
     ];
     if (tabBarPages.includes(url)) {
       wx.switchTab({ url });
@@ -124,57 +121,58 @@ Page({
   // 关于系统
   showAbout() {
     wx.showModal({
-      title: '关于系统',
-      content: '大学生暑期"三下乡"活动管理系统\n版本：1.0.0\n\n本系统用于支持高校"三下乡"社会实践活动的数字化管理。',
-      showCancel: false
+      title: "关于系统",
+      content:
+        '大学生暑期"三下乡"活动管理系统\n版本：1.0.0\n\n本系统用于支持高校"三下乡"社会实践活动的数字化管理。',
+      showCancel: false,
     });
   },
 
   // 联系客服
   contactService() {
     wx.showModal({
-      title: '联系客服',
-      content: '如有问题请联系：\n邮箱：service@example.com\n电话：400-123-4567',
-      showCancel: false
+      title: "联系客服",
+      content:
+        "如有问题请联系：\n邮箱：service@example.com\n电话：400-123-4567",
+      showCancel: false,
     });
   },
 
   // 退出登录
   logout() {
     wx.showModal({
-      title: '确认退出',
-      content: '确定要退出登录吗？',
+      title: "确认退出",
+      content: "确定要退出登录吗？",
       success: (res) => {
         if (res.confirm) {
           app.logout();
           this.setData({
             isLogin: false,
             userInfo: {
-              name: '未登录',
-              roleName: '请先登录',
-              avatarText: '?'
+              name: "未登录",
+              roleName: "请先登录",
+              avatarText: "?",
             },
-            stats: { applyCount: 0, progressCount: 0, resultCount: 0 },
             unreadCount: 0,
-            menuItems: []
+            menuItems: [],
           });
-          wx.showToast({ title: '已退出登录', icon: 'success' });
+          wx.showToast({ title: "已退出登录", icon: "success" });
         }
-      }
+      },
     });
   },
 
   // 切换身份
   switchRole() {
     wx.showModal({
-      title: '切换身份',
-      content: '确定要切换到其他身份吗？',
+      title: "切换身份",
+      content: "确定要切换到其他身份吗？",
       success: (res) => {
         if (res.confirm) {
           app.logout();
-          wx.navigateTo({ url: '/pages/auth/login' });
+          wx.navigateTo({ url: "/pages/auth/login" });
         }
-      }
+      },
     });
-  }
+  },
 });

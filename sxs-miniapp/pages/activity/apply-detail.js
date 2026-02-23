@@ -1,4 +1,5 @@
-const { projectApi, userApi, resultApi } = require("../../utils/api");
+const { projectApi, resultApi, userApi } = require("../../utils/api");
+const { debug } = require("../../utils/debug");
 const { uploadImage } = require("../../utils/request");
 
 Page({
@@ -33,7 +34,6 @@ Page({
       expectedResult: "",
     },
     detail: null,
-    resultCount: 0,
     canSubmitResult: false,
     canUploadProgress: false,
     canCloseProject: false,
@@ -82,18 +82,32 @@ Page({
         mode === "create"
           ? "新建申报"
           : mode === "edit"
-          ? "编辑申报"
-          : "申报详情",
+            ? "编辑申报"
+            : "申报详情",
     });
   },
 
   // 加载教师列表
   async loadTeachers() {
     try {
-      const teachers = await userApi.getTeachers();
+      // 先获取用户信息以获取学院ID
+      const userInfo = await userApi.getInfo();
+      const teachers = await userApi.getTeachers(userInfo.collegeId);
       this.setData({ teacherOptions: teachers });
+
+      // 如果是 view/edit 模式，且详情已加载，更新索引
+      if (this.data.detail && this.data.detail.teacher_id) {
+        const teacherIndex = teachers.findIndex(
+          (t) => t.id === this.data.detail.teacher_id,
+        );
+        if (teacherIndex >= 0) {
+          this.setData({ "form.teacherIndex": teacherIndex });
+        }
+      }
     } catch (err) {
       console.error("加载教师列表失败:", err);
+      // 如果获取失败，设置为空数组
+      this.setData({ teacherOptions: [] });
     }
   },
 
@@ -101,15 +115,29 @@ Page({
   async loadDetail(id) {
     try {
       const res = await projectApi.getDetail(id);
+      debug.log("加载项目详情原始数据:", res);
+
       const statusMap = {
-        draft: "草稿",
         pending: "待学院审核",
         college_approved: "待校级审核",
         school_approved: "审核通过",
         approved: "审核通过",
         closed: "已结项",
         rejected: "已驳回",
+        withdrawn: "已撤回",
       };
+      const membersArray = res.members || [];
+      const membersText = membersArray
+        .filter((m) => m.role === "member")
+        .map((m) => {
+          const parts = [m.name];
+          if (m.student_id || m.username)
+            parts.push(m.student_id || m.username);
+          if (m.phone) parts.push(m.phone);
+          return parts.join("-");
+        })
+        .join("\n");
+
       const detail = {
         ...res,
         startDate: res.start_date ? res.start_date.slice(0, 10) : "",
@@ -128,38 +156,36 @@ Page({
         teacherId: res.teacher_id,
         teacher: res.teacher_name,
         description: res.description,
-        // 团队成员从members数组中提取姓名
-        members:
-          res.members && res.members.length > 0
-            ? res.members
-                .filter((m) => m.role === "member")
-                .map((m) => m.name)
-                .join("、")
-            : "",
+        members: membersArray,
+        membersText: membersText,
         // 这些字段在数据库中可能不存在，使用默认值
         plan: res.plan || "",
         expectedResult: res.expected_result || "",
       };
-      this.setData({ form: detail, detail });
 
-      // 加载该项目成果数量（我的成果）
-      this.loadResultCount(id);
+      debug.log("处理后的详情数据:", detail);
+
+      // form中的members需要是字符串，供编辑使用
+      const formData = {
+        ...detail,
+        members: membersText,
+      };
+
+      this.setData({ form: formData, detail });
+
+      // 设置教师回显索引
+      if (res.teacher_id && this.data.teacherOptions.length > 0) {
+        const teacherIndex = this.data.teacherOptions.findIndex(
+          (t) => t.id === res.teacher_id,
+        );
+        if (teacherIndex >= 0) {
+          this.setData({ "form.teacherIndex": teacherIndex });
+        }
+      }
+
+      // 验证日期字段是否正确设置
     } catch (err) {
       console.error("加载项目详情失败:", err);
-    }
-  },
-
-  async loadResultCount(projectId) {
-    try {
-      const res = await resultApi.getMyList({
-        page: 1,
-        pageSize: 1,
-        projectId,
-      });
-      this.setData({ resultCount: Number(res.total) || 0 });
-    } catch (err) {
-      console.error("加载成果数量失败:", err);
-      this.setData({ resultCount: 0 });
     }
   },
 
@@ -176,7 +202,21 @@ Page({
     const index = e.detail.value;
     this.setData({
       "form.theme": this.data.themeOptions[index],
+      "form.themeIndex": index,
     });
+  },
+
+  // 教师选择
+  onTeacherChange(e) {
+    const index = e.detail.value;
+    const teacher = this.data.teacherOptions[index];
+    if (teacher) {
+      this.setData({
+        "form.teacher": teacher.name,
+        "form.teacherId": teacher.id,
+        "form.teacherIndex": index,
+      });
+    }
   },
 
   // 开始日期
@@ -227,76 +267,6 @@ Page({
     return true;
   },
 
-  // 保存草稿
-  async saveDraft() {
-    if (this.data.submitting) return;
-    this.setData({ submitting: true });
-
-    try {
-      const { form, id, mode } = this.data;
-      const data = {
-        title: form.title,
-        category: form.theme,
-        description: form.description,
-        targetArea: form.location,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        budget: parseFloat(form.budget) || 0,
-        teacherId: form.teacherId || null,
-        members: form.members,
-        plan: form.plan,
-        expected_result: form.expectedResult,
-      };
-
-      if (mode === "create") {
-        await projectApi.create(data);
-      } else {
-        await projectApi.update(id, data);
-      }
-
-      wx.showToast({ title: "草稿已保存", icon: "success" });
-    } catch (err) {
-      console.error("保存草稿失败:", err);
-    } finally {
-      this.setData({ submitting: false });
-    }
-  },
-
-  // 保存编辑
-  async saveEdit() {
-    if (this.data.submitting) return;
-    this.setData({ submitting: true });
-
-    try {
-      const { form, id } = this.data;
-      const data = {
-        title: form.title,
-        category: form.theme,
-        description: form.description,
-        targetArea: form.location,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        budget: parseFloat(form.budget) || 0,
-        teacherId: form.teacherId || null,
-        members: form.members,
-        plan: form.plan,
-        expected_result: form.expectedResult,
-      };
-
-      await projectApi.update(id, data);
-
-      // 重新加载详情以更新状态
-      await this.loadDetail(id);
-
-      wx.showToast({ title: "修改已保存", icon: "success" });
-    } catch (err) {
-      console.error("保存修改失败:", err);
-      wx.showToast({ title: "保存失败", icon: "none" });
-    } finally {
-      this.setData({ submitting: false });
-    }
-  },
-
   // 提交申报
   submitForm() {
     if (!this.validateForm()) return;
@@ -318,21 +288,23 @@ Page({
               endDate: form.endDate,
               budget: parseFloat(form.budget) || 0,
               teacherId: form.teacherId || null,
+              teacherName: form.teacher,
+              leaderPhone: form.phone,
               members: form.members,
               plan: form.plan,
               expected_result: form.expectedResult,
             };
 
-            let projectId = id;
+            // 调试日志
+            debug.formData(data, "提交项目数据");
+
             if (mode === "create") {
-              const createRes = await projectApi.create(data);
-              projectId = createRes.id;
+              await projectApi.create(data);
             } else {
               await projectApi.update(id, data);
+              // 如果是编辑（通常是驳回后重新提交），需要调用提交接口更新状态并触发通知
+              await projectApi.submit(id);
             }
-
-            // 提交审批
-            await projectApi.submit(projectId);
 
             wx.showToast({ title: "提交成功", icon: "success" });
             setTimeout(() => {
@@ -340,6 +312,13 @@ Page({
             }, 1500);
           } catch (err) {
             console.error("提交失败:", err);
+            // 显示更详细的错误信息
+            const errorMessage = err?.message || err?.msg || "提交失败，请重试";
+            wx.showToast({
+              title: errorMessage,
+              icon: "none",
+              duration: 3000,
+            });
           } finally {
             this.setData({ submitting: false });
           }
@@ -371,17 +350,11 @@ Page({
     });
   },
 
-  goToResultList() {
+  // 进入编辑模式
+  goToEdit() {
     const { id } = this.data;
-    if (!id) {
-      wx.showToast({ title: "项目ID不能为空", icon: "none" });
-      return;
-    }
-    const title = (this.data.detail && this.data.detail.title) || "";
-    wx.navigateTo({
-      url: `/pages/result/project?projectId=${id}&title=${encodeURIComponent(
-        title
-      )}`,
+    wx.redirectTo({
+      url: `/pages/activity/apply-detail?id=${id}&mode=edit`,
     });
   },
 
@@ -406,6 +379,22 @@ Page({
 
     wx.navigateTo({
       url: `/pages/progress/detail?mode=create&projectId=${id}`,
+    });
+  },
+
+  // 撤销申请
+  revokeProject() {
+    wx.showModal({
+      title: "撤销申请",
+      content: "确定要撤销该项目的审批申请吗？撤销后您可以重新修改并提交。",
+      success: (res) => {
+        if (res.confirm) {
+          projectApi.revoke(this.data.id).then(() => {
+            wx.showToast({ title: "已撤销" });
+            this.loadDetail(this.data.id);
+          });
+        }
+      },
     });
   },
 

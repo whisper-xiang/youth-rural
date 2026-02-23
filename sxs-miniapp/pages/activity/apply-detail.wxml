@@ -3,7 +3,10 @@
   <view class="form">
     <!-- 项目基本信息 -->
     <view class="section">
-      <view class="section-title">项目基本信息</view>
+      <view class="section-title">
+        <text>项目基本信息</text>
+        <view class="status-badge status-{{detail.status}}" wx:if="{{isView}}">{{detail.statusText}}</view>
+      </view>
       
       <view class="form-item">
         <view class="label">项目名称 <text class="required">*</text></view>
@@ -59,7 +62,11 @@
 
       <view class="form-item">
         <view class="label">指导教师</view>
-        <input class="input" placeholder="请输入指导教师姓名" value="{{form.teacher}}" bindinput="onInput" data-field="teacher" disabled="{{isView}}" />
+        <picker mode="selector" range="{{teacherOptions}}" range-key="name" value="{{form.teacherIndex || 0}}" bindchange="onTeacherChange" disabled="{{isView}}">
+          <view class="picker {{form.teacher ? '' : 'placeholder'}}">
+            {{form.teacher || '请选择指导教师'}}
+          </view>
+        </picker>
       </view>
 
       <view class="form-item">
@@ -68,8 +75,15 @@
           <block wx:if="{{detail.members && detail.members.length > 0}}">
             <view class="members-list">
               <view class="member-item" wx:for="{{detail.members}}" wx:key="user_id">
-                <view class="member-name">{{item.name}}</view>
-                <view class="member-role">{{item.role === 'leader' ? '负责人' : '成员'}}</view>
+                <view class="member-avatar">{{item.name ? item.name[0] : '?'}}</view>
+                <view class="member-info">
+                  <view class="member-name">{{item.name}}</view>
+                  <view class="member-role">{{item.role === 'leader' ? '负责人' : '成员'}}</view>
+                </view>
+                <view class="member-contact" wx:if="{{item.phone}}">
+                  <text class="contact-icon">📱</text>
+                  <text class="contact-text">{{item.phone}}</text>
+                </view>
                 <view class="member-resp" wx:if="{{item.responsibility}}">职责：{{item.responsibility}}</view>
               </view>
             </view>
@@ -78,7 +92,7 @@
             <view class="members-text">{{form.members || '暂无团队成员信息'}}</view>
           </block>
         </block>
-        <textarea class="textarea" placeholder="请输入团队成员姓名，用逗号分隔" value="{{form.members}}" bindinput="onInput" data-field="members" disabled="{{isView}}" wx:else />
+        <textarea class="textarea" placeholder="格式：姓名-学号-电话，多个成员换行或分号隔开。例：张三-2021001-13800138000" value="{{form.members}}" bindinput="onInput" data-field="members" disabled="{{isView}}" wx:else />
       </view>
     </view>
 
@@ -104,40 +118,34 @@
   </view>
 
   <!-- 底部按钮 -->
-  <view class="footer" wx:if="{{mode === 'create'}}">
-    <view class="btn-save" bindtap="saveDraft">保存草稿</view>
+  <view class="footer" wx:if="{{!isView}}">
     <view class="btn-submit" bindtap="submitForm">提交申报</view>
   </view>
 
-  <!-- 编辑模式底部按钮 -->
-  <view class="footer" wx:if="{{mode === 'edit'}}">
-    <view class="btn-save" bindtap="saveEdit">保存修改</view>
-    <view class="btn-submit" wx:if="{{detail.status === 'draft' || detail.status === 'rejected'}}" bindtap="submitForm">重新提交</view>
-  </view>
-
-  <!-- 查看模式下的状态 -->
-  <view class="status-bar" wx:if="{{isView}}">
-    <view class="status-label">当前状态：</view>
-    <view class="status-value status-{{detail.status}}">{{detail.statusText}}</view>
-  </view>
-
-  <!-- 查看模式下：成果入口（只读） -->
-  <view class="result-entry" wx:if="{{isView}}" bindtap="goToResultList">
-    <view class="result-entry-left">已提交成果</view>
-    <view class="result-entry-right">
-      <text class="result-count">{{resultCount}}</text>
-      <text class="result-arrow">查看</text>
+  <!-- 评优结果展示 -->
+  <view class="evaluation-card" wx:if="{{isView && detail.evaluation && (detail.evaluation.final_score || detail.evaluation.award_level)}}">
+    <view class="evaluation-header">
+      <view class="evaluation-title">评优结果</view>
+      <view class="evaluation-activity">{{detail.evaluation.evaluation_title}}</view>
+    </view>
+    <view class="evaluation-body">
+      <view class="evaluation-score-box" wx:if="{{detail.evaluation.final_score}}">
+        <view class="evaluation-score-value">{{detail.evaluation.final_score}}</view>
+        <view class="evaluation-score-label">最终评分</view>
+      </view>
+      <view class="evaluation-award-box" wx:if="{{detail.evaluation.award_level}}">
+        <view class="evaluation-award-level">{{detail.evaluation.award_level}}</view>
+        <view class="evaluation-award-label">获奖等级</view>
+      </view>
     </view>
   </view>
 
   <!-- 查看模式下的操作按钮 -->
-  <view class="footer" wx:if="{{isView && detail.status === 'approved' && (canSubmitResult || canUploadProgress)}}">
-    <view class="btn-result" wx:if="{{canSubmitResult}}" bindtap="goToResult">提交成果</view>
-    <view class="btn-progress" wx:if="{{canUploadProgress}}" bindtap="goToProgress">上传进度</view>
-  </view>
-
-  <!-- 教师结项（仅已通过项目可结项） -->
-  <view class="footer" wx:if="{{isView && canCloseProject && detail.status === 'approved'}}">
-    <view class="btn-close" bindtap="closeProject">结项</view>
+  <view class="footer" wx:if="{{isView}}">
+    <view class="btn-revoke" wx:if="{{detail.status === 'pending'}}" bindtap="revokeProject">撤销申请</view>
+    <view class="btn-edit" wx:if="{{detail.status === 'rejected' || detail.status === 'withdrawn'}}" bindtap="goToEdit">修改申报</view>
+    <view class="btn-result" wx:if="{{detail.status === 'approved' && canSubmitResult}}" bindtap="goToResult">提交成果</view>
+    <view class="btn-progress" wx:if="{{detail.status === 'approved' && canUploadProgress}}" bindtap="goToProgress">上传进度</view>
+    <view class="btn-close" wx:if="{{canCloseProject && detail.status === 'approved'}}" bindtap="closeProject">结项</view>
   </view>
 </view>

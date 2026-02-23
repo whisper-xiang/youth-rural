@@ -142,7 +142,7 @@ router.post("/create", verifyToken, async (req, res) => {
       return error(res, "无权限操作该项目");
     }
 
-    if (project.status !== "approved") {
+    if (!["approved", "school_approved"].includes(project.status)) {
       return error(res, "项目未通过审核，不能上传进度");
     }
 

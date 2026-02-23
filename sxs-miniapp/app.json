@@ -15,9 +15,11 @@
     "pages/result/detail",
     "pages/evaluate/list",
     "pages/evaluate/detail",
+    "pages/evaluate/ranking",
     "pages/notice/list",
     "pages/notice/create",
-    "pages/notice/detail"
+    "pages/notice/detail",
+    "pages/project/workspace"
   ],
   "window": {
     "navigationBarTitleText": "三下乡活动管理",
@@ -38,11 +40,11 @@
       },
       {
         "pagePath": "pages/activity/apply-list",
-        "text": "申报"
+        "text": "项目"
       },
       {
-        "pagePath": "pages/progress/list",
-        "text": "进度"
+        "pagePath": "pages/notice/list",
+        "text": "通知"
       },
       {
         "pagePath": "pages/profile/index",

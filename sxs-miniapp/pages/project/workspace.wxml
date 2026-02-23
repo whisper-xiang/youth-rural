@@ -1,0 +1,449 @@
+<view class="page">
+  <!-- 项目头部信息 -->
+  <view class="project-header">
+    <view class="project-title">{{projectInfo.name}}</view>
+    <view class="project-meta">
+      <view class="project-role {{projectInfo.userRole}}">
+        <text class="role-icon">{{projectInfo.userRole === 'leader' ? '👑' : '👥'}}</text>
+        <text class="role-text">{{projectInfo.userRoleText}}</text>
+      </view>
+      <view class="project-status {{projectInfo.statusClass}}">
+        <text class="status-icon">{{projectInfo.statusIcon}}</text>
+        <text class="status-text">{{projectInfo.statusText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- Tab 导航 -->
+  <view class="tab-container">
+    <view class="tab-list">
+      <view 
+        class="tab-item {{currentTab === index ? 'active' : ''}}" 
+        wx:for="{{tabs}}" 
+        wx:key="index"
+        bindtap="switchTab"
+        data-index="{{index}}"
+      >
+        <text class="tab-icon">{{item.icon}}</text>
+        <text class="tab-name">{{item.name}}</text>
+        <view class="tab-badge" wx:if="{{item.badge}}">{{item.badge}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Tab 内容区域 -->
+  <view class="content-container">
+    <!-- 项目详情 -->
+    <view class="tab-content" wx:if="{{currentTab === 0}}">
+      <view class="detail-section">
+        <view class="section-title">项目基本信息</view>
+        <view class="info-card">
+          <view class="info-item">
+            <text class="info-label">项目名称</text>
+            <text class="info-value">{{projectInfo.name}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">项目类型</text>
+            <text class="info-value">{{projectInfo.type}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">创建时间</text>
+            <text class="info-value">{{projectInfo.createTime}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">项目周期</text>
+            <text class="info-value">{{projectInfo.startDate}} 至 {{projectInfo.endDate}}</text>
+          </view>
+          <view class="info-item">
+            <text class="info-label">项目预算</text>
+            <text class="info-value">¥{{projectInfo.budget}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="detail-section">
+        <view class="section-title">团队成员</view>
+        <view class="team-list">
+          <view class="team-item" wx:for="{{projectInfo.team}}" wx:key="id">
+            <view class="member-avatar">{{item.name.charAt(0)}}</view>
+            <view class="member-info">
+              <view class="member-name">{{item.name}}</view>
+              <view class="member-role">{{item.role}}</view>
+            </view>
+            <view class="member-contact" wx:if="{{item.phone}}">
+              <text class="contact-icon">📱</text>
+              <text class="contact-text">{{item.phone}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="detail-section">
+        <view class="section-title">指导老师</view>
+        <view class="teacher-info">
+          <view class="teacher-avatar">{{projectInfo.teacher.name.charAt(0)}}</view>
+          <view class="teacher-details">
+            <view class="teacher-name">{{projectInfo.teacher.name}}</view>
+            <view class="teacher-title">{{projectInfo.teacher.title}}</view>
+            <view class="teacher-department">{{projectInfo.teacher.department}}</view>
+          </view>
+          <view class="teacher-contact" wx:if="{{projectInfo.teacher.email}}">
+            <text class="contact-icon">📧</text>
+            <text class="contact-text">{{projectInfo.teacher.email}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="detail-section">
+        <view class="section-title">审核流程</view>
+        <view class="timeline">
+          <view class="timeline-item" wx:for="{{projectInfo.timeline}}" wx:key="index">
+            <view class="timeline-dot {{item.status}}"></view>
+            <view class="timeline-content">
+              <view class="timeline-title">{{item.title}}</view>
+              <view class="timeline-desc">{{item.description}}</view>
+              <view class="timeline-time" wx:if="{{item.time}}">{{item.time}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 进度记录 -->
+    <view class="tab-content" wx:if="{{currentTab === 1}}">
+      <view class="progress-header">
+        <view class="progress-title">项目进度</view>
+        <button class="add-progress-btn" bindtap="showAddProgress" wx:if="{{projectInfo.status !== 'closed'}}">
+          <text class="btn-icon">➕</text>
+          <text class="btn-text">添加进度</text>
+        </button>
+      </view>
+      
+      <view class="progress-list" wx:if="{{progressList.length > 0}}">
+        <view class="progress-item" wx:for="{{progressList}}" wx:key="id">
+          <view class="progress-header">
+            <view class="progress-type-tag {{item.type}}">{{item.typeText}}</view>
+            <view class="progress-date">{{item.date}}</view>
+            <view class="progress-actions" wx:if="{{projectInfo.status !== 'closed'}}">
+              <view class="action-btn edit" bindtap="editProgress" data-item="{{item}}">
+                <text class="action-icon">✏️</text>
+              </view>
+            </view>
+          </view>
+          <view class="progress-content">
+            <view class="progress-title">{{item.title}}</view>
+            <view class="progress-desc">{{item.description}}</view>
+            <view class="progress-files" wx:if="{{item.files && item.files.length > 0}}">
+              <view 
+                class="file-item" 
+                wx:for="{{item.files}}" 
+                wx:key="index" 
+                wx:for-item="file"
+                bindtap="onFileTap"
+                data-file="{{file}}"
+                data-files="{{item.files}}"
+              >
+                <text class="file-icon">{{file.type === 'image' ? '🖼️' : file.type === 'video' ? '🎥' : '📄'}}</text>
+                <text class="file-name">{{file.name}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="progress-author">by {{item.author}}</view>
+        </view>
+      </view>
+      
+      <view class="empty-progress" wx:else>
+        <view class="empty-icon">📝</view>
+        <view class="empty-title">暂无进度记录</view>
+        <view class="empty-desc">点击上方按钮添加第一条进度</view>
+      </view>
+    </view>
+
+    <!-- 成果材料 -->
+    <view class="tab-content" wx:if="{{currentTab === 2}}">
+      <view class="result-header">
+        <view class="result-title">成果材料</view>
+        <button class="upload-btn" bindtap="showUploadModal" wx:if="{{projectInfo.status !== 'closed'}}">
+          <text class="btn-icon">📤</text>
+          <text class="btn-text">上传成果</text>
+        </button>
+      </view>
+      
+      <block wx:if="{{hasResultFiles}}">
+        <view class="result-categories">
+          <!-- 图片 -->
+          <view class="category-section" wx:if="{{resultFiles.images.length > 0}}">
+            <view class="category-title">
+              <text class="category-icon">🖼️</text>
+              <text class="category-name">图片 ({{resultFiles.images.length}})</text>
+            </view>
+            <view class="image-grid">
+              <image 
+                class="image-item" 
+                wx:for="{{resultFiles.images}}" 
+                wx:key="index"
+                src="{{item.url}}"
+                mode="aspectFill"
+                bindtap="previewImage"
+                data-url="{{item.url}}"
+                data-urls="{{resultFiles.images}}"
+              ></image>
+            </view>
+          </view>
+          
+          <!-- 文档 -->
+          <view class="category-section" wx:if="{{resultFiles.documents.length > 0}}">
+            <view class="category-title">
+              <text class="category-icon">📄</text>
+              <text class="category-name">文档 ({{resultFiles.documents.length}})</text>
+            </view>
+            <view class="document-list">
+              <view class="document-item" wx:for="{{resultFiles.documents}}" wx:key="index">
+                <text class="doc-icon">📄</text>
+                <text class="doc-name">{{item.name}}</text>
+                <text class="doc-size">{{item.size}}</text>
+                <view class="doc-actions">
+                  <text class="action-btn" bindtap="downloadFile" data-url="{{item.url}}">下载</text>
+                  <text class="action-btn delete" bindtap="deleteFile" data-id="{{item.id}}" data-type="document" wx:if="{{projectInfo.status !== 'closed'}}">删除</text>
+                </view>
+              </view>
+            </view>
+          </view>
+          
+          <!-- 视频 -->
+          <view class="category-section" wx:if="{{resultFiles.videos.length > 0}}">
+            <view class="category-title">
+              <text class="category-icon">🎥</text>
+              <text class="category-name">视频 ({{resultFiles.videos.length}})</text>
+            </view>
+            <view class="video-list">
+              <view class="video-item" wx:for="{{resultFiles.videos}}" wx:key="index">
+                <video class="video-player" src="{{item.url}}" controls></video>
+                <view class="video-info">
+                  <text class="video-name">{{item.name}}</text>
+                  <text class="video-duration">{{item.duration}}</text>
+                </view>
+                <view class="video-actions">
+                  <text class="action-btn delete" bindtap="deleteFile" data-id="{{item.id}}" data-type="video" wx:if="{{projectInfo.status !== 'closed'}}">删除</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <view class="empty-result" wx:else>
+        <view class="empty-icon">📁</view>
+        <view class="empty-title">暂无成果材料</view>
+        <view class="empty-desc">点击上方按钮上传项目成果</view>
+      </view>
+    </view>
+
+    <!-- 结项申请 -->
+    <view class="tab-content" wx:if="{{currentTab === 3}}">
+      <view class="closure-header">
+        <view class="closure-title">结项申请</view>
+        <view class="closure-status" wx:if="{{closureInfo.status}}">
+          <text class="status-text">{{projectInfo.status === 'closed' ? '已结项' : closureInfo.statusText}}</text>
+        </view>
+      </view>
+      
+      <view class="closure-form">
+        <view class="form-section">
+          <view class="form-title">项目总结</view>
+          <textarea 
+            class="form-textarea" 
+            placeholder="{{projectInfo.status === 'closed' ? '' : '请详细总结项目实施情况、主要成果、创新点等...'}}"
+            value="{{closureInfo.summary}}"
+            bindinput="onSummaryInput"
+            maxlength="2000"
+            disabled="{{projectInfo.status === 'closed'}}"
+          ></textarea>
+          <view class="char-count" wx:if="{{projectInfo.status !== 'closed'}}">{{closureInfo.summary.length}}/2000</view>
+        </view>
+        
+        <view class="form-section">
+          <view class="form-title">成果说明</view>
+          <textarea 
+            class="form-textarea" 
+            placeholder="{{projectInfo.status === 'closed' ? '' : '请说明项目取得的具体成果、社会影响、实践意义等...'}}"
+            value="{{closureInfo.achievements}}"
+            bindinput="onAchievementsInput"
+            maxlength="1500"
+            disabled="{{projectInfo.status === 'closed'}}"
+          ></textarea>
+          <view class="char-count" wx:if="{{projectInfo.status !== 'closed'}}">{{closureInfo.achievements.length}}/1500</view>
+        </view>
+        
+        <view class="form-section">
+          <view class="form-title">社会影响</view>
+          <textarea 
+            class="form-textarea" 
+            placeholder="{{projectInfo.status === 'closed' ? '' : '请描述项目产生的社会影响、媒体报道、获奖情况等...'}}"
+            value="{{closureInfo.impact}}"
+            bindinput="onImpactInput"
+            maxlength="1000"
+            disabled="{{projectInfo.status === 'closed'}}"
+          ></textarea>
+          <view class="char-count" wx:if="{{projectInfo.status !== 'closed'}}">{{closureInfo.impact.length}}/1000</view>
+        </view>
+        
+        <view class="form-actions" wx:if="{{projectInfo.status !== 'closed'}}">
+          <button class="submit-btn" bindtap="submitClosure" disabled="{{!canSubmit}}">提交结项申请</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 老师反馈 -->
+    <view class="tab-content" wx:if="{{currentTab === 4}}">
+      <view class="feedback-header">
+        <view class="feedback-title">老师反馈</view>
+        <view class="feedback-count" wx:if="{{feedbackList.length > 0}}">
+          共 {{feedbackList.length}} 条反馈
+        </view>
+      </view>
+      
+      <view class="feedback-list" wx:if="{{feedbackList.length > 0}}">
+        <view class="feedback-item" wx:for="{{feedbackList}}" wx:key="id">
+          <view class="feedback-header-info">
+            <view class="feedback-author">{{item.author}}</view>
+            <view class="feedback-time">{{item.time}}</view>
+            <view class="feedback-type {{item.type}}">{{item.typeText}}</view>
+          </view>
+          <view class="feedback-content">{{item.content}}</view>
+          <view class="feedback-target" wx:if="{{item.target}}">
+            <text class="target-label">针对：</text>
+            <text class="target-text">{{item.target}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <view class="empty-feedback" wx:else>
+        <view class="empty-icon">💬</view>
+        <view class="empty-title">暂无老师反馈</view>
+        <view class="empty-desc">老师会对您的项目进度和成果进行指导</view>
+      </view>
+    </view>
+
+    <!-- 评优情况 -->
+    <view class="tab-content" wx:if="{{currentTab === 5}}">
+      <view class="evaluation-header">
+        <view class="evaluation-title">评优情况</view>
+      </view>
+      
+      <view class="evaluation-card" wx:if="{{evaluationInfo && evaluationInfo.evaluation}}">
+        <view class="excellent-badge" wx:if="{{projectInfo.is_excellent}}">
+          优秀项目
+        </view>
+        
+        <view class="eval-main">
+          <view class="eval-label">参评活动：{{evaluationInfo.evaluation.evaluation_title}}</view>
+          <view class="eval-summary">
+            <view class="eval-summary-item">
+              <view class="eval-value score">{{evaluationInfo.evaluation.final_score || '暂无评分'}}</view>
+              <view class="eval-label">最终得分</view>
+            </view>
+            <view class="eval-summary-item" wx:if="{{evaluationInfo.evaluation.award_level}}">
+              <view class="eval-value award">{{evaluationInfo.evaluation.award_level}}</view>
+              <view class="eval-label">获奖等级</view>
+            </view>
+          </view>
+        </view>
+        
+        <view class="eval-details" wx:if="{{evaluationInfo.allScores && evaluationInfo.allScores.length > 0}}">
+          <view class="section-subtitle">专家评审意见</view>
+          <view class="expert-opinion-list">
+            <view class="expert-opinion-item" wx:for="{{evaluationInfo.allScores}}" wx:key="index">
+              <view class="expert-header">
+                <text class="expert-name">专家 {{index + 1}}</text>
+                <text class="expert-score">{{item.total_score}}分</text>
+              </view>
+              <view class="expert-comment">{{item.comment || '未填写评价意见'}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <view class="empty-evaluation" wx:else>
+        <view class="empty-eval-icon">🏆</view>
+        <view class="empty-eval-text">暂未参与评优</view>
+        <view class="empty-desc">项目结项后将由管理员统一开启评优环节</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加进度弹窗 -->
+  <view class="modal" wx:if="{{showAddProgressModal}}">
+    <view class="modal-mask" bindtap="hideAddProgress"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <view class="modal-title">添加进度</view>
+        <view class="modal-close" bindtap="hideAddProgress">×</view>
+      </view>
+      <view class="modal-body">
+        <view class="form-item">
+          <view class="form-label">进度标题</view>
+          <input 
+            class="form-input" 
+            placeholder="请输入进度标题"
+            value="{{newProgress.title}}"
+            bindinput="onProgressTitleInput"
+          />
+        </view>
+        <view class="form-item">
+          <view class="form-label">进度描述</view>
+          <textarea 
+            class="form-textarea" 
+            placeholder="请详细描述当前进展情况..."
+            value="{{newProgress.description}}"
+            bindinput="onProgressDescInput"
+          ></textarea>
+        </view>
+        <view class="form-item">
+          <view class="form-label">上传文件</view>
+          <view class="upload-area" bindtap="chooseFiles">
+            <text class="upload-icon">📎</text>
+            <text class="upload-text">点击选择文件</text>
+          </view>
+          <view class="file-list" wx:if="{{newProgress.files.length > 0}}">
+            <view class="file-item" wx:for="{{newProgress.files}}" wx:key="index">
+              <text class="file-name">{{item.name}}</text>
+              <text class="file-remove" bindtap="removeFile" data-index="{{index}}">×</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="cancel-btn" bindtap="hideAddProgress">取消</button>
+        <button class="confirm-btn" bindtap="confirmAddProgress">确定</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 上传成果弹窗 -->
+  <view class="modal" wx:if="{{showUploadModal}}">
+    <view class="modal-mask" bindtap="hideUploadModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <view class="modal-title">上传成果</view>
+        <view class="modal-close" bindtap="hideUploadModal">×</view>
+      </view>
+      <view class="modal-body">
+        <view class="upload-types">
+          <view class="upload-type" bindtap="chooseImage">
+            <text class="type-icon">🖼️</text>
+            <text class="type-name">上传图片</text>
+          </view>
+          <view class="upload-type" bindtap="chooseDocument">
+            <text class="type-icon">📄</text>
+            <text class="type-name">上传文档</text>
+          </view>
+          <view class="upload-type" bindtap="chooseVideo">
+            <text class="type-icon">🎥</text>
+            <text class="type-name">上传视频</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

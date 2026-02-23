@@ -145,18 +145,21 @@
 | `project_attachment` | 项目附件表 | project_id, file_name, file_url |
 
 **项目类别 (category)**:
-- `theory` - 理论普及宣讲
-- `village` - 乡村振兴促进
-- `observe` - 发展成就观察
-- `unity` - 民族团结实践
+- `乡村振兴`
+- `支教助学`
+- `红色文化`
+- `科技支农`
+- `医疗卫生`
+- `法律援助`
+- `其他`
 
 **项目状态 (status)**:
-- `draft` - 草稿
-- `pending` - 待审批
-- `college_approved` - 学院已审批
-- `school_approved` - 学校已审批
+- `pending` - 待学院审批
+- `college_approved` - 学院审批通过，待校级审批
+- `school_approved` - 校级审批通过（立项成功）
+- `approved` - 已立项
 - `rejected` - 已驳回
-- `completed` - 已完成
+- `closed` - 已结项
 
 ### 3. 审批管理模块
 
