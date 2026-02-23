@@ -87,6 +87,7 @@ App({
         desc: "发起新的社会实践项目申请",
         url: "/pages/activity/apply-detail?mode=create",
         icon: "icon-create",
+        iconSymbol: "🚀",
       },
       {
         key: "apply",
@@ -130,6 +131,7 @@ App({
         desc: "查看优秀项目公示结果",
         url: "/pages/evaluate/ranking",
         icon: "icon-ranking",
+        iconSymbol: "🏆",
       },
       {
         key: "notice",
