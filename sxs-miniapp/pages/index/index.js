@@ -30,6 +30,18 @@ Page({
       console.log("用户已登录, isStudent:", isStudent);
 
       const modules = app.getRoleModules();
+      const iconSymbolMap = {
+        apply: "📝",
+        approve: "✅",
+        progress: "📊",
+        result: "📁",
+        evaluate: "⭐",
+        notice: "📢",
+      };
+      const modulesWithIcons = (modules || []).map((m) => ({
+        ...m,
+        iconSymbol: m.iconSymbol || iconSymbolMap[m.key] || "•",
+      }));
       this.setData({
         isLogin: true,
         isStudent,

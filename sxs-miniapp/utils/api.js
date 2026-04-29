@@ -51,6 +51,8 @@ const projectApi = {
 const approvalApi = {
   // 获取审批列表
   getList: (params) => get("/approval/list", params),
+  // 获取审批详情
+  getDetail: (id) => get(`/approval/detail/${id}`),
   // 审批通过
   approve: (id, opinion) => post(`/approval/approve/${id}`, { opinion }),
   // 审批驳回

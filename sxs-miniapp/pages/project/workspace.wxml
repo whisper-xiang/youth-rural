@@ -301,6 +301,10 @@
         <view class="feedback-count" wx:if="{{feedbackList.length > 0}}">
           共 {{feedbackList.length}} 条反馈
         </view>
+        <button class="feedback-btn" wx:if="{{isTeacher}}" bindtap="showFeedbackModal">
+          <text class="btn-icon">💬</text>
+          <text class="btn-text">添加反馈</text>
+        </button>
       </view>
       
       <view class="feedback-list" wx:if="{{feedbackList.length > 0}}">
@@ -320,8 +324,10 @@
       
       <view class="empty-feedback" wx:else>
         <view class="empty-icon">💬</view>
-        <view class="empty-title">暂无老师反馈</view>
-        <view class="empty-desc">老师会对您的项目进度和成果进行指导</view>
+        <view class="empty-title" wx:if="{{!isTeacher}}">暂无老师反馈</view>
+        <view class="empty-title" wx:if="{{isTeacher}}">暂无反馈记录</view>
+        <view class="empty-desc" wx:if="{{!isTeacher}}">老师会对您的项目进度和成果进行指导</view>
+        <view class="empty-desc" wx:if="{{isTeacher}}">点击上方按钮为学生添加反馈指导</view>
       </view>
     </view>
 
@@ -443,6 +449,50 @@
             <text class="type-name">上传视频</text>
           </view>
         </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加反馈弹窗 -->
+  <view class="modal" wx:if="{{showFeedbackModal}}">
+    <view class="modal-mask" bindtap="hideFeedbackModal"></view>
+    <view class="modal-content">
+      <view class="modal-header">
+        <view class="modal-title">添加反馈</view>
+        <view class="modal-close" bindtap="hideFeedbackModal">×</view>
+      </view>
+      <view class="modal-body">
+        <view class="form-item">
+          <view class="form-label">反馈类型</view>
+          <radio-group class="radio-group" bindchange="onFeedbackTypeChange">
+            <label class="radio-item">
+              <radio value="general" checked="{{newFeedback.type === 'general'}}"/>
+              <text>综合评价</text>
+            </label>
+            <label class="radio-item">
+              <radio value="progress" checked="{{newFeedback.type === 'progress'}}"/>
+              <text>进度点评</text>
+            </label>
+            <label class="radio-item">
+              <radio value="result" checked="{{newFeedback.type === 'result'}}"/>
+              <text>成果评价</text>
+            </label>
+          </radio-group>
+        </view>
+        <view class="form-item">
+          <view class="form-label">反馈内容</view>
+          <textarea 
+            class="form-textarea" 
+            placeholder="请输入您的反馈意见和建议..."
+            value="{{newFeedback.content}}"
+            bindinput="onFeedbackContentInput"
+            maxlength="500"
+          ></textarea>
+        </view>
+      </view>
+      <view class="modal-footer">
+        <button class="btn-cancel" bindtap="hideFeedbackModal">取消</button>
+        <button class="btn-confirm" bindtap="submitFeedback">提交反馈</button>
       </view>
     </view>
   </view>

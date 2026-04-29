@@ -87,6 +87,7 @@ App({
         desc: "发起新的社会实践项目申请",
         url: "/pages/activity/apply-detail?mode=create",
         icon: "icon-create",
+        iconSymbol: "🚀",
       },
       {
         key: "apply",
@@ -94,6 +95,8 @@ App({
         desc: "跟踪申报进度与项目管理",
         url: "/pages/activity/apply-list",
         icon: "icon-apply",
+        iconType: "success",
+        iconSymbol: "📝",
       },
       {
         key: "approve",
@@ -101,6 +104,8 @@ App({
         desc: "审核项目申报材料",
         url: "/pages/approve/list",
         icon: "icon-approve",
+        iconType: "info",
+        iconSymbol: "✅",
       },
       {
         key: "result",
@@ -108,6 +113,8 @@ App({
         desc: "查阅和管理活动实践成果",
         url: "/pages/result/list",
         icon: "icon-result",
+        iconType: "success",
+        iconSymbol: "📁",
       },
       {
         key: "evaluate",
@@ -115,6 +122,8 @@ App({
         desc: "对申报项目进行打分与评价",
         url: "/pages/evaluate/list",
         icon: "icon-evaluate",
+        iconType: "warn",
+        iconSymbol: "⭐",
       },
       {
         key: "ranking",
@@ -122,6 +131,7 @@ App({
         desc: "查看优秀项目公示结果",
         url: "/pages/evaluate/ranking",
         icon: "icon-ranking",
+        iconSymbol: "🏆",
       },
       {
         key: "notice",
@@ -129,6 +139,8 @@ App({
         desc: "查阅系统通知与活动资讯",
         url: "/pages/notice/list",
         icon: "icon-notice",
+        iconType: "info",
+        iconSymbol: "📢",
       },
       {
         key: "notice_manage",

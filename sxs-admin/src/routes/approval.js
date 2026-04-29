@@ -92,6 +92,114 @@ router.get(
   },
 );
 
+// 获取审批详情
+router.get(
+  "/detail/:id",
+  verifyToken,
+  checkRole("college_admin", "school_admin"),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      const role = req.user.role;
+
+      // 查询项目基本信息
+      const [[project]] = await db.query(
+        `SELECT p.*, 
+                u.real_name as leader_name,
+                u.phone as leader_phone,
+                t.real_name as teacher_name,
+                c.name as college_name
+         FROM project p
+         LEFT JOIN sys_user u ON p.leader_id = u.id
+         LEFT JOIN sys_user t ON p.teacher_id = t.id
+         LEFT JOIN sys_college c ON p.college_id = c.id
+         WHERE p.id = ?`,
+        [id],
+      );
+
+      if (!project) {
+        return error(res, "项目不存在", 404);
+      }
+
+      // 权限检查：学院管理员只能查看本学院项目
+      if (role === "college_admin") {
+        const [users] = await db.query(
+          "SELECT college_id FROM sys_user WHERE id = ?",
+          [userId],
+        );
+        if (users.length === 0 || users[0].college_id !== project.college_id) {
+          return error(res, "无权限查看该项目", 403);
+        }
+      }
+
+      // 查询项目成员
+      const [members] = await db.query(
+        `SELECT m.*, u.real_name, u.phone
+         FROM project_member m
+         LEFT JOIN sys_user u ON m.user_id = u.id
+         WHERE m.project_id = ?
+         ORDER BY m.role DESC`,
+        [id],
+      );
+
+      // 查询审批记录
+      const [approvalRecords] = await db.query(
+        `SELECT ar.*, u.real_name as approver_name
+         FROM approval_record ar
+         LEFT JOIN sys_user u ON ar.approver_id = u.id
+         WHERE ar.project_id = ?
+         ORDER BY ar.created_at ASC`,
+        [id],
+      );
+
+      // 格式化成员信息
+      const memberNames = members
+        .map((m) => m.real_name)
+        .filter((name) => name)
+        .join("、");
+
+      // 格式化审批记录
+      const formattedRecords = approvalRecords.map((record) => ({
+        approver: record.approver_name || "未知",
+        action: record.action,
+        actionText: record.action === "approve" ? "通过" : "驳回",
+        time: record.created_at,
+        remark: record.opinion,
+      }));
+
+      // 构造返回数据
+      const detail = {
+        id: project.id,
+        title: project.title,
+        theme: project.category, // 使用category作为主题
+        location: project.target_area,
+        startDate: project.start_date,
+        endDate: project.end_date,
+        teamName: project.team_name || `${project.leader_name}团队`,
+        college: project.college_name,
+        leader: project.leader_name,
+        phone: project.leader_phone,
+        teacher: project.teacher_name,
+        members: memberNames,
+        description: project.description,
+        plan: project.plan || "",
+        expectedResult: project.expected_result || "",
+        status: project.status,
+        submit_time: project.created_at,
+        approve_time: project.approved_at,
+        reject_reason: project.reject_reason,
+        approval_records: formattedRecords,
+      };
+
+      success(res, detail);
+    } catch (err) {
+      console.error("Get approval detail error:", err);
+      error(res, "获取审批详情失败", 500);
+    }
+  },
+);
+
 // 审批通过
 router.post(
   "/approve/:id",

@@ -38,14 +38,22 @@ Page({
     },
     feedbackList: [],
     showAddProgressModal: false,
+    showFeedbackModal: false,
     isEditing: false,
     editingId: null,
     showUploadModal: false,
     canSubmit: false,
+    isTeacher: false,
     newProgress: {
       title: "",
       description: "",
       files: [],
+    },
+    newFeedback: {
+      content: "",
+      type: "general",
+      targetId: null,
+      targetType: "",
     },
   },
 
@@ -60,7 +68,11 @@ Page({
       return;
     }
 
-    this.setData({ projectId });
+    // 检查是否为教师角色
+    const app = getApp();
+    const isTeacher = app.globalData.role === "teacher";
+
+    this.setData({ projectId, isTeacher });
     this.loadAllData();
   },
 
@@ -80,6 +92,7 @@ Page({
         this.loadProgressList(),
         this.loadResultFiles(),
         this.loadEvaluationInfo(),
+        this.loadFeedbackList(),
       ]);
     } catch (err) {
       console.error("加载数据失败:", err);
@@ -254,6 +267,37 @@ Page({
       this.setData({ evaluationInfo: info });
     } catch (err) {
       console.error("加载评优信息失败:", err);
+    }
+  },
+
+  // 加载反馈列表
+  async loadFeedbackList() {
+    try {
+      // 模拟反馈数据，实际应该从API获取
+      const mockFeedback = [
+        {
+          id: 1,
+          author: "王教授",
+          time: "2026-07-15",
+          content: "项目进展顺利，建议加强实践数据的收集和分析。",
+          type: "progress",
+          typeText: "进度点评",
+          target: "第一次进度汇报",
+        },
+        {
+          id: 2,
+          author: "王教授",
+          time: "2026-08-20",
+          content: "成果材料丰富，但报告结构需要进一步优化。",
+          type: "result",
+          typeText: "成果评价",
+          target: "中期成果材料",
+        },
+      ];
+
+      this.setData({ feedbackList: mockFeedback });
+    } catch (err) {
+      console.error("加载反馈列表失败:", err);
     }
   },
 
@@ -796,5 +840,96 @@ Page({
         }
       },
     });
+  },
+
+  // 显示反馈弹窗
+  showFeedbackModal() {
+    if (!this.data.isTeacher) {
+      wx.showToast({ title: "只有教师可以添加反馈", icon: "none" });
+      return;
+    }
+
+    this.setData({
+      showFeedbackModal: true,
+      newFeedback: {
+        content: "",
+        type: "general",
+        targetId: null,
+        targetType: "",
+      },
+    });
+  },
+
+  // 隐藏反馈弹窗
+  hideFeedbackModal() {
+    this.setData({
+      showFeedbackModal: false,
+    });
+  },
+
+  // 反馈内容输入
+  onFeedbackContentInput(e) {
+    this.setData({
+      "newFeedback.content": e.detail.value,
+    });
+  },
+
+  // 反馈类型选择
+  onFeedbackTypeChange(e) {
+    this.setData({
+      "newFeedback.type": e.detail.value,
+    });
+  },
+
+  // 提交反馈
+  async submitFeedback() {
+    const { newFeedback } = this.data;
+
+    if (!newFeedback.content.trim()) {
+      wx.showToast({
+        title: "请填写反馈内容",
+        icon: "none",
+      });
+      return;
+    }
+
+    try {
+      wx.showLoading({ title: "提交中..." });
+
+      // 这里应该调用实际的API
+      // await feedbackApi.create({
+      //   projectId: this.data.projectId,
+      //   content: newFeedback.content,
+      //   type: newFeedback.type,
+      // });
+
+      // 模拟提交成功
+      const newFeedbackItem = {
+        id: Date.now(),
+        author: "当前教师",
+        time: new Date().toISOString().slice(0, 10),
+        content: newFeedback.content,
+        type: newFeedback.type,
+        typeText: newFeedback.type === "progress" ? "进度点评" : "成果评价",
+      };
+
+      const feedbackList = [...this.data.feedbackList, newFeedbackItem];
+      this.setData({ feedbackList });
+
+      wx.hideLoading();
+      wx.showToast({
+        title: "反馈成功",
+        icon: "success",
+      });
+
+      this.hideFeedbackModal();
+    } catch (err) {
+      console.error("Submit feedback error:", err);
+      wx.hideLoading();
+      wx.showToast({
+        title: "提交失败",
+        icon: "none",
+      });
+    }
   },
 });
