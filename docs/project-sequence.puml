@@ -1,0 +1,32 @@
+@startuml 项目申报时序图
+
+title 项目申报时序图
+
+actor 学生 as S
+actor 学院管理员 as C
+actor 校级管理员 as A
+actor 指导教师 as T
+database 数据库 as DB
+
+S -> DB : 创建项目
+S -> DB : 提交审批(status=pending)
+
+C -> DB : 院级审批
+alt 驳回
+  C -> DB : status=rejected
+  S -> DB : 修改重提
+else 通过
+  C -> DB : status=college_approved
+end
+
+A -> DB : 校级审批
+alt 驳回
+  A -> DB : status=rejected
+  S -> DB : 修改重提
+else 通过
+  A -> DB : status=approved
+end
+
+T -> DB : 项目结项(status=closed)
+
+@enduml
