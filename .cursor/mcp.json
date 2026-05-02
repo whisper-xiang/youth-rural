@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "paper-gen": {
+      "command": "pnpm",
+      "args": ["dev"],
+      "cwd": "/Users/yun/custom/paper-gen-plugin"
+    }
+  }
+}

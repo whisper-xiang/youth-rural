@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import docx; print\\('ok'\\)\")",
+      "Bash(pip3 install *)",
+      "Bash(python3 -c \"import docx; print\\('python-docx ok'\\)\")",
+      "Bash(python3 -m venv /tmp/thesis-venv)",
+      "Bash(/tmp/thesis-venv/bin/pip install *)",
+      "Bash(/tmp/thesis-venv/bin/python gen.py)"
+    ]
+  }
+}
