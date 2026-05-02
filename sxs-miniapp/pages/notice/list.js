@@ -73,7 +73,8 @@ Page({
       });
 
       // 格式化数据
-      const newList = res.list.map((item) => ({
+      const rawList = res.list || res || [];
+      const newList = rawList.map((item) => ({
         ...item,
         typeName: this.getTypeName(item.type),
         publishTime: item.publish_time ? item.publish_time.slice(0, 10) : "",

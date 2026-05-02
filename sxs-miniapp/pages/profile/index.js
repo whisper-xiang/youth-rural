@@ -63,6 +63,7 @@ Page({
 
   // 根据角色获取菜单
   getMenuByRole(role) {
+    console.log("获取菜单，当前角色:", role);
     const allMenus = [
       {
         key: "approve",
@@ -92,7 +93,9 @@ Page({
         ],
       },
     ];
-    return allMenus.filter((m) => m.roles.includes(role));
+    const filteredMenus = allMenus.filter((m) => m.roles.includes(role));
+    console.log("过滤后的菜单:", filteredMenus);
+    return filteredMenus;
   },
 
   // 跳转登录
@@ -105,15 +108,21 @@ Page({
   // 跳转页面
   goToPage(e) {
     const url = e.currentTarget.dataset.url;
+    console.log("点击菜单项，URL:", url);
+
     const tabBarPages = [
       "/pages/index/index",
       "/pages/activity/apply-list",
       "/pages/progress/list",
       "/pages/profile/index",
+      "/pages/notice/list",
     ];
+
     if (tabBarPages.includes(url)) {
+      console.log("使用switchTab跳转到:", url);
       wx.switchTab({ url });
     } else {
+      console.log("使用navigateTo跳转到:", url);
       wx.navigateTo({ url });
     }
   },

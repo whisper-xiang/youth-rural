@@ -4,8 +4,9 @@
 
 const { debug } = require("./debug");
 
+const BASE_URL = "http://localhost:3000/api"; // 默认是这个
 // API 基础地址
-const BASE_URL = "http://localhost:3000/api";
+// const BASE_URL = "http://192.168.50.245:3000/api";
 
 // 请求拦截器
 const requestInterceptors = [];

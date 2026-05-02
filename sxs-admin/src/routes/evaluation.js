@@ -173,6 +173,12 @@ router.post(
         [projectId],
       );
 
+      if (!ep) {
+        return res
+          .status(400)
+          .json({ code: 400, message: "该项目未关联评优活动" });
+      }
+
       if (existing) {
         // 更新评分
         await db.query(
@@ -239,7 +245,11 @@ router.post(
       success(res, { totalScore }, "评分成功");
     } catch (err) {
       console.error("Submit score error:", err);
-      error(res, "评分失败", 500);
+      console.error("Error stack:", err.stack);
+      console.error("Request body:", req.body);
+      console.error("Project ID:", req.params.projectId);
+      console.error("User ID:", req.user.id);
+      error(res, `评分失败: ${err.message}`, 500);
     }
   },
 );

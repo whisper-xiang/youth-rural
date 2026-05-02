@@ -11,17 +11,7 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "useCompilerPlugins": false,
-    "compileWorklet": false,
-    "uploadWithSourceMap": true,
-    "packNpmManually": false,
-    "minifyWXSS": true,
-    "minifyWXML": true,
-    "localPlugins": false,
-    "disableUseStrict": false,
-    "condition": false,
-    "swc": false,
-    "disableSWC": true
+    "useCompilerPlugins": false
   },
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},
@@ -29,7 +19,6 @@
     "ignore": [],
     "include": []
   },
-  "appid": "wx443ceba17a6d446d",
-  "editorSetting": {},
-  "libVersion": "3.9.2"
+  "appid": "touristappid",
+  "editorSetting": {}
 }

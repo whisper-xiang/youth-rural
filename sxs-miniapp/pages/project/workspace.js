@@ -240,7 +240,7 @@ Page({
           size: item.file_size ? this.formatFileSize(item.file_size) : "",
         };
 
-        const ext = item.url.split(".").pop().toLowerCase();
+        const ext = item.url ? item.url.split(".").pop().toLowerCase() : "";
         if (["jpg", "jpeg", "png", "gif"].includes(ext)) {
           images.push(file);
         } else if (["mp4", "mov", "avi"].includes(ext)) {

@@ -14,7 +14,7 @@
 
   <!-- 功能菜单（根据角色动态显示） -->
   <view class="menu-section" wx:if="{{menuItems.length > 0}}">
-    <view class="menu-item" wx:for="{{menuItems}}" wx:key="key" bindtap="goToPage" data-url="{{item.url}}">
+    <view class="menu-item" wx:for="{{menuItems}}" wx:key="key" catchtap="goToPage" data-url="{{item.url}}">
       <view class="menu-icon {{item.icon}}"></view>
       <view class="menu-text">{{item.name}}</view>
       <view class="menu-arrow">›</view>

@@ -37,7 +37,8 @@ Page({
     const isTeacher = app.globalData.role === "teacher";
 
     this.setData({ canCreate, isTeacher });
-    // 返回列表时不自动刷新，避免接口偶发为空导致列表被清空
+    // 刷新列表以显示新创建的项目
+    this.loadList(true);
   },
 
   onPullDownRefresh() {
@@ -66,6 +67,7 @@ Page({
       console.log("接口返回数据示例:", res.list?.[0]);
 
       const statusMap = {
+        draft: "草稿",
         pending: "待学院审核",
         college_approved: "待校级审核",
         school_approved: "审核通过",
@@ -127,5 +129,13 @@ Page({
         url: `/pages/activity/apply-detail?id=${id}&mode=view`,
       });
     }
+  },
+
+  // 编辑项目
+  goEdit(e) {
+    const id = e.currentTarget.dataset.id;
+    wx.navigateTo({
+      url: `/pages/activity/apply-detail?id=${id}&mode=edit`,
+    });
   },
 });
